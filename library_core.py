@@ -1,20 +1,17 @@
-book = {
-    "title": "The Pragmatic Programmer",
-    "author": "Aaaa Bbbb and Cccc Dddd",
-    "year": 2004,
-    "isbn": "353665465",
-    "genre": "Programming",
-    "avaliable": True 
-}
+# Initilise the Book class, given it key detials such as ISBN, title, author, genre, year, total_copies
+# For example. self.title daves the genre into the the object, allowing it to be used later
 
-#setting up dictionary with key chaarcteristics
 
-def display_book(book_dict):
-    if not isinstance(book_dict, dict):
-        raise TypeError("Dictionary expected")
+class Book:
+    def __init__(self, ISBN, title, author, genre, year, total_copies):
+        self.ISBN = ISBN
+        self.title = title
+        self.author = author
+        self.genre = genre
+        self.year = year
+        self.total_copies = total_copies
+
+
+
+class LibraryManager:
     
-    print("Book Details")
-    for k,v in book_dict.items():
-        print(f"{k}, {v}")
-
-#end
