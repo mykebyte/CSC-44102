@@ -11,7 +11,18 @@ class Book:
         self.year = year
         self.total_copies = total_copies
 
+    def check_avaliability(self):
+        return self.total_copies > 0
+        # checks to see if teh book if avaliable (quantity > 0)
+        # added self so it checks the specific books copies
+    
+    
+    
+
 
 
 class LibraryManager:
-    
+    def __init__(self):
+        self.books = []
+        self.users = []
+
