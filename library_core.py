@@ -67,4 +67,12 @@ class LibraryManager:
             if title.lower() in book.title.lower():
                 found_books.append(book)
         
-        return found_book
+        return found_books
+    
+                # reveiver poitned out an important issue, with my old code, is the isbn didnt exist, python wouldve skipped the enitre if block, and the method would've reached the end without the book being added
+    def add_book(self, new_book):
+        if any(book.ISBN == new_book.ISBN for book in self.books): # basically search is a book already exists
+            return False
+        
+        self.books.append(new_book)
+        return True
