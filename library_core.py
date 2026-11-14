@@ -42,7 +42,13 @@ class Book:
     def show_book_info(self):
         return(f"ID: {self.ISBN}, title: {self.title}, Author: {self.author}, Genre {self.genre}, year {self.year}, total_copies {self.total_copies}")
 
-    
+# a User class would be usefull to regualte who take and brings books into the library
+class User:
+    def __init__(self, member_id, name):
+        self.member_id = member_id
+        self.name = name
+        
+
 
 
 
@@ -55,10 +61,11 @@ class LibraryManager:
     # Check if new user doesnt correlate with old user, checks the user isbn and works from there
         if any(current_user.ISBN == new_user.ISBN for current_user in self.users):
             print("ERROR: User already exists, new ID required")
-            return
+            return False
+        
         self.users.append(new_user)
         print(f"USER {new_user.name} added successfully.")
-
+        return True
 
     def search_book(self, title):
         found_books = []
