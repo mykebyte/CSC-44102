@@ -1,3 +1,6 @@
+from datetime import date
+from datetime import timedelta
+
 # Following the PEP8 style guidfe, all my classes will use pascalCase, constants will use UPPER_CASE, the rest snake_case
 
 
@@ -42,12 +45,46 @@ class Book:
     def show_book_info(self):
         return(f"ID: {self.ISBN}, title: {self.title}, Author: {self.author}, Genre {self.genre}, year {self.year}, total_copies {self.total_copies}")
 
-# a User class would be usefull to regualte who take and brings books into the library
-class User:
-    def __init__(self, member_id, name):
-        self.member_id = member_id
-        self.name = name
+
+class Loan:
+    def __init__(self, user, book):
+        self.user = user
+        self.book = book
+        self.loan_date = loan_date
+        self.due_date = self.due_date + date
+        self.renewals = 0
+        self.is_active = True # vars i think i need
+
+    def check_overdue(self): # check if loan is acitve/p[ast due date]
+        if self.is_active and date.today() > self.due_date:
+            return True
+        return False 
+    
+    def renew_loan(self): #renewal logic
+        if not self.is_active:
+            print("Error...")
+            return False
         
+        if 1 >= self.renewals: #make sure its nto arlesayd been renewed
+            print("Error,,,")
+            return False
+        
+        self.due_date +- givenTime
+        self.renewal_count +=1
+
+        print(f"Loan reneweds")
+        return True
+
+    def return_loan(self): # return logic
+        if not self.is_active: #sotyp it being returned more than once
+            print("Error..")
+            return False
+
+    self.is_active = False #inmactive bc its been reutrned
+    self.book.avaliable_copies += 1
+
+    print("here would bne the book title, followe dby if it was retuerned successfully,") 
+    return True   
 
 
 
