@@ -10,6 +10,12 @@ from datetime import timedelta
 
 class Book:
     def __init__(self, ISBN, title, author, genre, year, total_copies):
+        if not ISBN or not tile or not author:
+            raise ValueError("ERROR: - ISBB, title and author required")
+        
+        if not isinstance(total_copies, int) or isinstance(total_copies, bool) or total_copies < 0:
+            raise ValueError("ERROR: Total copies be non-negative")
+
         self.ISBN = ISBN
         self.title = title
         self.author = author
@@ -47,29 +53,33 @@ class Book:
 
 
 class Loan:
+    LOAN_PERIOD = 14
+    MAX_RENEWALS = 1
+
+
     def __init__(self, user, book):
         self.user = user
         self.book = book
-        self.loan_date = loan_date
-        self.due_date = self.due_date + date
+        self.loan_date = date.today()
+        self.due_date = self.loan_date + timedelta(days=self.LOAN_PERIOD)
         self.renewals = 0
-        self.is_active = True # vars i think i need
+        self.is_active = True 
 
-    def check_overdue(self): # check if loan is acitve/p[ast due date]
+    def check_overdue(self): # FIX THIS]
         if self.is_active and date.today() > self.due_date:
             return True
         return False 
     
     def renew_loan(self): #renewal logic
         if not self.is_active:
-            print("Error...")
             return False
-        
-        if 1 >= self.renewals: #make sure its nto arlesayd been renewed
-            print("Error,,,")
+
+        if self.check_overdue():
             return False
-        
-        self.due_date +- givenTime
+
+        self.due_date += timedelta(days = self.LOAN_PERIOD)
+
+
         self.renewal_count +=1
 
         print(f"Loan reneweds")
@@ -120,3 +130,4 @@ class LibraryManager:
         
         self.books.append(new_book)
         return True
+    
