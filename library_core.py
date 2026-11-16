@@ -10,7 +10,7 @@ from datetime import timedelta
 
 class Book:
     def __init__(self, ISBN, title, author, genre, year, total_copies):
-        if not ISBN or not tile or not author:
+        if not ISBN or not title or not author:
             raise ValueError("ERROR: - ISBB, title and author required")
         
         if not isinstance(total_copies, int) or isinstance(total_copies, bool) or total_copies < 0:
@@ -33,13 +33,18 @@ class Book:
     def update_quantity(self, amount):
         # to prevent reducing totla copies below teh actual number of borrwed books
 
+        # return self.avaliable_copies > 0 
+    
+        if not isinstance(amount, int) or isinstance(amount, bool):
+            return False
+
         currently_borrowed = self.total_copies - self.avaliable_copies
         new_total = self.total_copies + amount
 
-
-        # update total copies of the book, after every borrow or return
-        if new_total < 0 or new_total < currently_borrowed:
-            print("ERROR: Total copies cannot fall below 0")
+        if new_total < currently_borrowed:
+            return False
+        
+        if new_total < 0:
             return False
 
         self.total_copies = new_total
@@ -52,15 +57,28 @@ class Book:
         return(f"ID: {self.ISBN}, title: {self.title}, Author: {self.author}, Genre {self.genre}, year {self.year}, total_copies {self.total_copies}")
 
 class User:
+    MAX_LOANS = 3
     def __init__(self, member_id, name, email):
 
         if not member_id or not name or not email:
             raise("ERROR: memmerb id, or name or email is required")
         
+        if "@" not in email or "." not in email:
+            raise ValueError("enter email")
+
         self.member_id = member_id
         self.name = name
         self.email = email
+
         self.loans = []
+
+        def active_loan_count(self):
+            count = 0
+
+            for loan in self.loans:
+                if loan.is_active:
+                    count += 1
+            return count
 
         def show_user_info(self):
             return self.member_id, self.name, self.email 
@@ -127,7 +145,7 @@ class LibraryManager:
 
     def create_user(self, new_user):
     # Check if new user doesnt correlate with old user, checks the user isbn and works from there
-        if any(current_user.ISBN == new_user.ISBN for current_user in self.users):
+        if any(current_user.member_id == new_user.member_id for current_user in self.users):
             print("ERROR: User already exists, new ID required")
             return False
         
@@ -136,6 +154,12 @@ class LibraryManager:
         return True
 
     def search_book(self, title):
+
+        if not isinstance(title, str):
+            print("erprr, wrong format ")
+            return
+        
+
         found_books = []
 
         for book in self.books:
@@ -169,9 +193,9 @@ class LibraryManager:
                 
                 self.books.remove(book)
 
-                print("removed")
+                return True
 
-        return True
+        return False
     
     def borrow_book(self, user, book):
 
@@ -187,9 +211,46 @@ class LibraryManager:
             print("erorno exist")
             return False
         
-        def return_book(self, loan):
-                
+        if user.active_loan_count() >= User.MAX_LOANS:
+            return 
+        
+        new_loan = Loan(user, book)
+        book.avaliable_copies -= 1
 
+        user.loans.append(new_loan)
+        self.loans.append(new_loan)
+        
+    def return_book(self, loan):
 
+        if loan not in self.loans:
+            print("erorno exist")
+            return False
+        
+        if loan.return_loan():
 
+            loan.book.avaliable_copies += 1
     
+            return True
+        
+        return False
+
+    def renew_loan(self, loan):
+        if loan not in self.loans:
+            print("erorno exist")
+            return False
+        return loan.renew_loan()
+    
+
+    def show_all_books(self): #thought this would be nice, to show all books
+        if not self.books:
+            print("no book")
+            return
+        
+        for book in self.books:
+            print(book.show_book_info())
+
+    def show_all_user(self):
+        if not self.users:
+            return("no users")
+        
+        return [user.show_user_info() for user in self.users]
