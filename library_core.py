@@ -51,6 +51,21 @@ class Book:
     def show_book_info(self):
         return(f"ID: {self.ISBN}, title: {self.title}, Author: {self.author}, Genre {self.genre}, year {self.year}, total_copies {self.total_copies}")
 
+class User:
+    def __init__(self, member_id, name, email):
+
+        if not member_id or not name or not email:
+            raise("ERROR: memmerb id, or name or email is required")
+        
+        self.member_id = member_id
+        self.name = name
+        self.email = email
+        self.loans = []
+
+        def show_user_info(self):
+            return self.member_id, self.name, self.email 
+
+
 
 class Loan:
     LOAN_PERIOD = 14
@@ -60,8 +75,8 @@ class Loan:
     def __init__(self, user, book):
         self.user = user
         self.book = book
-        self.loan_date = date.today()
-        self.due_date = self.loan_date + timedelta(days=self.LOAN_PERIOD)
+        self.loan_date = date.today() # find when the book as actually borrowed
+        self.due_date = self.loan_date + timedelta(days=self.LOAN_PERIOD) #fiond due date
         self.renewals = 0
         self.is_active = True 
 
@@ -72,17 +87,23 @@ class Loan:
     
     def renew_loan(self): #renewal logic
         if not self.is_active:
+            print("Error: not active")
             return False
 
+        if self.renewals >= self.MAX_RENEWALS:
+            print("Error: you have reached max renewals")
+            return False
+        
+
         if self.check_overdue():
+            print("erorr: overdue books cant be renewed")
             return False
 
         self.due_date += timedelta(days = self.LOAN_PERIOD)
 
-
         self.renewal_count +=1
 
-        print(f"Loan reneweds")
+        print("Loan reneweds")
         return True
 
     def return_loan(self): # return logic
@@ -90,11 +111,11 @@ class Loan:
             print("Error..")
             return False
 
-    self.is_active = False #inmactive bc its been reutrned
-    self.book.avaliable_copies += 1
+        self.is_active = False #inmactive bc its been reutrned
+        
+        self.book.avaliable_copies += 1
 
-    print("here would bne the book title, followe dby if it was retuerned successfully,") 
-    return True   
+        return True   
 
 
 
@@ -130,4 +151,45 @@ class LibraryManager:
         
         self.books.append(new_book)
         return True
+    
+    def search_user(self, member_id):
+       for user in self.users:
+           if user.member_id == member_id:
+               return user
+
+
+    
+    def remove_book(self, ISBN):
+        for book in self.books:
+            if book.ISBN == ISBN:
+
+                if book.avaliable_copies != book.total_copies:
+                    print("Error..")
+                    return False
+                
+                self.books.remove(book)
+
+                print("removed")
+
+        return True
+    
+    def borrow_book(self, user, book):
+
+        if user not in self.users: # see if user exits
+            print("erorno exist")
+            return False
+        
+        if book not in self.books: #see if book exists
+                print("erorno exist")
+                return False
+        
+        if not book.check_avaliability():
+            print("erorno exist")
+            return False
+        
+        def return_book(self, loan):
+                
+
+
+
     
