@@ -14,7 +14,7 @@ result = lib.borrow_book(user, book)
 
 assert book.avaliable_copies == old_copies - 1
 assert result[0] is True
-assert book.avaliable_copies == old_copies
+
 
 
 print("Borrow test passed!")
