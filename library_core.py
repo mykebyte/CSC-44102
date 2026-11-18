@@ -106,35 +106,30 @@ class Loan:
     
     def renew_loan(self): #renewal logic
         if not self.is_active:
-            print("Error: not active")
-            return False
+            return False, "Loan is not active"
 
         if self.renewals >= self.MAX_RENEWALS:
-            print("Error: you have reached max renewals")
-            return False
+            return False, "Maximum renewals reached"
         
 
         if self.check_overdue():
-            print("erorr: overdue books cant be renewed")
-            return False
+            return False, "Overdue book cannot be renewed"
 
         self.due_date += timedelta(days = self.LOAN_PERIOD)
 
         self.renewals +=1
 
-        print("Loan reneweds")
-        return True
+        return True, "Loan renewed successfully"
 
     def return_loan(self): # return logic
         if not self.is_active: #sotyp it being returned more than once
-            print("Error..")
-            return False
+            return False, "Loan has already been returned"
 
         self.is_active = False #inmactive bc its been reutrned
         
         self.book.avaliable_copies += 1
 
-        return True   
+        return True, "Book returned succesffully"
 
 
 
@@ -224,12 +219,12 @@ class LibraryManager:
     def return_book(self, loan):
 
         if loan not in self.loans:
-            return False
+            return False, "Loan does not exist"
         return loan.return_loan()
         
     def renew_loan(self, loan):
         if loan not in self.loans:
-            return False
+            return False, "Loan doesn't exist"
 
         return loan.return_loan()
         
