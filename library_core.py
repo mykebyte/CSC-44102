@@ -58,10 +58,11 @@ class Book:
 
 class User:
     MAX_LOANS = 3
+
     def __init__(self, member_id, name, email):
 
         if not member_id or not name or not email:
-            raise("ERROR: memmerb id, or name or email is required")
+            raise ValueError("ERROR: memmerb id, or name or email is required")
         
         if "@" not in email or "." not in email:
             raise ValueError("enter email")
@@ -72,16 +73,16 @@ class User:
 
         self.loans = []
 
-        def active_loan_count(self):
-            count = 0
+    def active_loan_count(self):
+        count = 0
 
-            for loan in self.loans:
-                if loan.is_active:
-                    count += 1
-            return count
+        for loan in self.loans:
+            if loan.is_active:
+                count += 1
+        return count
 
-        def show_user_info(self):
-            return self.member_id, self.name, self.email 
+    def show_user_info(self):
+        return self.member_id, self.name, self.email 
 
 
 
@@ -98,7 +99,7 @@ class Loan:
         self.renewals = 0
         self.is_active = True 
 
-    def check_overdue(self): # FIX THIS]
+    def check_overdue(self): # done
         if self.is_active and date.today() > self.due_date:
             return True
         return False 
@@ -119,7 +120,7 @@ class Loan:
 
         self.due_date += timedelta(days = self.LOAN_PERIOD)
 
-        self.renewal_count +=1
+        self.renewals +=1
 
         print("Loan reneweds")
         return True
@@ -142,6 +143,7 @@ class LibraryManager:
     def __init__(self):
         self.books = []
         self.users = []
+        self.loans = []
 
     def create_user(self, new_user):
     # Check if new user doesnt correlate with old user, checks the user isbn and works from there
@@ -212,7 +214,7 @@ class LibraryManager:
             return False
         
         if user.active_loan_count() >= User.MAX_LOANS:
-            return 
+            return False
         
         new_loan = Loan(user, book)
         book.avaliable_copies -= 1
@@ -220,25 +222,22 @@ class LibraryManager:
         user.loans.append(new_loan)
         self.loans.append(new_loan)
         
+        return True #if we get to this point, then its fine to go
+    
     def return_book(self, loan):
 
         if loan not in self.loans:
-            print("erorno exist")
             return False
+        return loan.return_loan()
         
-        if loan.return_loan():
-
-            loan.book.avaliable_copies += 1
-    
-            return True
-        
-        return False
-
     def renew_loan(self, loan):
         if loan not in self.loans:
-            print("erorno exist")
             return False
-        return loan.renew_loan()
+
+        return loan.return_loan()
+        
+
+ 
     
 
     def show_all_books(self): #thought this would be nice, to show all books
@@ -254,3 +253,4 @@ class LibraryManager:
             return("no users")
         
         return [user.show_user_info() for user in self.users]
+    
