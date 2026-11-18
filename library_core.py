@@ -202,19 +202,16 @@ class LibraryManager:
     def borrow_book(self, user, book):
 
         if user not in self.users: # see if user exits
-            print("erorno exist")
-            return False
+            return False, "User doesn't exist"
         
         if book not in self.books: #see if book exists
-                print("erorno exist")
-                return False
+                return False, "Book doesn't exist"
         
         if not book.check_avaliability():
-            print("erorno exist")
-            return False
+            return False, "Book not avaliable"
         
         if user.active_loan_count() >= User.MAX_LOANS:
-            return False
+            return False, "Maximum loans reached"
         
         new_loan = Loan(user, book)
         book.avaliable_copies -= 1
@@ -222,7 +219,7 @@ class LibraryManager:
         user.loans.append(new_loan)
         self.loans.append(new_loan)
         
-        return True #if we get to this point, then its fine to go
+        return True, "Book borrowed successfully"
     
     def return_book(self, loan):
 
