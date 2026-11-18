@@ -150,13 +150,11 @@ class LibraryManager:
         return True, "User addedd successfully"
 
     def search_book(self, title):
-
-        if not isinstance(title, str):
-            return False, "Wrong Format"
-        
-
         found_books = []
 
+        if not isinstance(title, str):
+            return found_books
+ 
         for book in self.books:
             if title.lower() in book.title.lower():
                 found_books.append(book)
@@ -175,6 +173,8 @@ class LibraryManager:
        for user in self.users:
            if user.member_id == member_id:
                return user
+           
+        return None # Added didnce hte method searches for a yuserm so either return no usr or none
 
 
     
@@ -240,7 +240,9 @@ class LibraryManager:
 
     def show_all_user(self):
         if not self.users:
-            return("no users")
-        
-        return [user.show_user_info() for user in self.users]
-    
+            found_users = []
+
+            for user in self.users:
+                found_users.append(user.show_user_info())
+
+            return found_users
