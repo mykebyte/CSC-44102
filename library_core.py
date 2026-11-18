@@ -143,18 +143,16 @@ class LibraryManager:
     def create_user(self, new_user):
     # Check if new user doesnt correlate with old user, checks the user isbn and works from there
         if any(current_user.member_id == new_user.member_id for current_user in self.users):
-            print("ERROR: User already exists, new ID required")
-            return False
+            
+            return False, "User exists alreaady"
         
         self.users.append(new_user)
-        print(f"USER {new_user.name} added successfully.")
-        return True
+        return True, "User addedd successfully"
 
     def search_book(self, title):
 
         if not isinstance(title, str):
-            print("erprr, wrong format ")
-            return
+            return False, "Wrong Format"
         
 
         found_books = []
@@ -185,8 +183,7 @@ class LibraryManager:
             if book.ISBN == ISBN:
 
                 if book.avaliable_copies != book.total_copies:
-                    print("Error..")
-                    return False
+                    return False, "Can't remove book because its borrowed"
                 
                 self.books.remove(book)
 
@@ -234,11 +231,12 @@ class LibraryManager:
 
     def show_all_books(self): #thought this would be nice, to show all books
         if not self.books:
-            print("no book")
-            return
-        
-        for book in self.books:
-            print(book.show_book_info())
+            found_books = []
+
+            for book in self.books:
+                found_books.append(book.show_book_info())
+
+            return found_books
 
     def show_all_user(self):
         if not self.users:
