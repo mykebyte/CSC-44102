@@ -36,21 +36,21 @@ class Book:
         # return self.avaliable_copies > 0 
     
         if not isinstance(amount, int) or isinstance(amount, bool):
-            return False
+            return False, "Needs to be a whole number"
 
         currently_borrowed = self.total_copies - self.avaliable_copies
         new_total = self.total_copies + amount
 
         if new_total < currently_borrowed:
-            return False
+            return False, "cant remove copies that are borrowed"
         
         if new_total < 0:
-            return False
+            return False, "Total copies cannot be negative"
 
         self.total_copies = new_total
         self.avaliable_copies = self.total_copies - currently_borrowed
 
-        return True
+        return True, "Quantity successfully updated"
 
 
     def show_book_info(self):
@@ -164,16 +164,16 @@ class LibraryManager:
                 # reveiver poitned out an important issue, with my old code, is the isbn didnt exist, python wouldve skipped the enitre if block, and the method would've reached the end without the book being added
     def add_book(self, new_book):
         if any(book.ISBN == new_book.ISBN for book in self.books): # basically search is a book already exists
-            return False
+            return False, "Book already exists"
         
         self.books.append(new_book)
-        return True
+        return True, "Book added successfully"
     
     def search_user(self, member_id):
-       for user in self.users:
-           if user.member_id == member_id:
-               return user
-           
+        for user in self.users:
+            if user.member_id == member_id:
+                return user
+                   
         return None # Added didnce hte method searches for a yuserm so either return no usr or none
 
 
@@ -187,9 +187,9 @@ class LibraryManager:
                 
                 self.books.remove(book)
 
-                return True
+                return True, "Book succesfully removed"
 
-        return False
+        return False, "Book no exists"
     
     def borrow_book(self, user, book):
 
@@ -223,14 +223,13 @@ class LibraryManager:
         if loan not in self.loans:
             return False, "Loan doesn't exist"
 
-        return loan.return_loan()
+        return loan.renew_loan()
         
 
  
     
 
     def show_all_books(self): #thought this would be nice, to show all books
-        if not self.books:
             found_books = []
 
             for book in self.books:
@@ -239,10 +238,9 @@ class LibraryManager:
             return found_books
 
     def show_all_user(self):
-        if not self.users:
-            found_users = []
+        found_users = []
 
-            for user in self.users:
-                found_users.append(user.show_user_info())
+        for user in self.users:
+            found_users.append(user.show_user_info())
 
-            return found_users
+        return found_users
