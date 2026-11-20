@@ -67,7 +67,7 @@ class User:
         if "@" not in email or "." not in email:
             raise ValueError("enter email")
 
-        self.member_id = member_id
+        self.member_id = str(member_id)
         self.name = name
         self.email = email
 
@@ -132,22 +132,31 @@ class Loan:
         return True, "Book returned succesffully"
 
 
-
-
 class LibraryManager:
     def __init__(self):
         self.books = []
         self.users = []
         self.loans = []
+        self.next_member_no = 1
 
-    def create_user(self, new_user):
+    def create_user(self, name, email):
+        # second decioon is the coutner only moves once user is built properly
+        # 2nd attept doesnt use an ID 
+   
     # Check if new user doesnt correlate with old user, checks the user isbn and works from there
-        if any(current_user.member_id == new_user.member_id for current_user in self.users):
-            
-            return False, "User exists alreaady"
-        
+        member_id = f"M{self.next_member_no:03d}"       
+
+
+        try:
+            new_user = User(member_id, name, email)
+
+        except ValueError as error:
+            return False, str(error), None # try exscept, if validationf ails, 
+
         self.users.append(new_user)
-        return True, "User addedd successfully"
+        self.next_member_no += 1
+
+        return True, "User addedd successfully", new_user
 
     def search_book(self, title):
         found_books = []
@@ -170,6 +179,8 @@ class LibraryManager:
         return True, "Book added successfully"
     
     def search_user(self, member_id):
+        member_id = str(member_id)
+
         for user in self.users:
             if user.member_id == member_id:
                 return user
@@ -209,6 +220,7 @@ class LibraryManager:
         book.avaliable_copies -= 1
 
         user.loans.append(new_loan)
+        # loan = lib.loans[-1]
         self.loans.append(new_loan)
         
         return True, "Book borrowed successfully"
