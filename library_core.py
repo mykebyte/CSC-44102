@@ -268,7 +268,7 @@ class LibraryManager:
             return False, "Book not avaliable", None
         
         if user.active_loan_count() >= User.MAX_LOANS:
-            return False, "Maximum loans reached"
+            return False, "Maximum loans reached", None
         
         new_loan = Loan(user, book)
         book.avaliable_copies -= 1
@@ -294,6 +294,18 @@ class LibraryManager:
                 return loan
             
         return None
+
+    def get_user_loans(self, member_id):
+        """
+        Returns all loans, including returned loans, belongiong to a member
+        returns: empty list, if teh member doesn texist
+        """
+        user = self.search_user(member_id)
+
+        if user is None: 
+            return []
+        
+        return user.loans
 
     def return_book(self, loan):
         """returns a loan 

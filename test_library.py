@@ -143,6 +143,62 @@ def test_find_returned_loan():
     assert loan_found is None
 
 
+def test_get_user_loans():
+    """checks all loans are returned """
+
+    lib = LibraryManager()
+
+    success, message, user1 = lib.create_user("a", "a@email.com")
+
+    book1 = Book("123", "pyth", "fds sd", "dsds", 2026, 2)
+    book2 = Book("456", "java", "htgfsd sdf", "fdgs", 2026, 2)
+
+    lib.add_book(book1) 
+    lib.add_book(book2)
+
+    success, message, loan1 = lib.borrow_book(user1, book1)
+    success, message, loan2 = lib.borrow_book(user1, book2)
+
+    user_loans = lib.get_user_loans("M001")
+
+    assert len(user_loans) == 2
+    assert user_loans[0] is loan1
+    assert user_loans[1] is loan2
+
+
+def test_loan_includes_return():
+    """checks teh loans are in the loan history"""
+
+    lib = LibraryManager()
+
+    success, message, user1 = lib.create_user("a", "a@email.com")
+    book = Book("123", "pyth", "fds sd", "dsds", 2026, 2)
+    lib.add_book(book)
+
+    success, message, loan = lib.borrow_book(user1, book)
+
+    lib.return_book(loan)
+
+
+
+    user_loans = lib.get_user_loans("M001")
+
+    assert len(user_loans) == 1
+    assert user_loans[0] is loan
+    assert user_loans[0].is_active is False
+
+
+def test_get_user_loans_unknown():
+    """checks empty list is returned for the unknwon member"""
+    lib = LibraryManager()
+    user_loans = lib.get_user_loans("M999")
+
+    assert user_loans == []
+    
+
+
+
+
 
 
 
