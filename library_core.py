@@ -259,13 +259,13 @@ class LibraryManager:
         """
 
         if user not in self.users: # see if user exits
-            return False, "User doesn't exist"
+            return False, "User doesn't exist", None
         
         if book not in self.books: #see if book exists
-            return False, "Book doesn't exist"
+            return False, "Book doesn't exist", None
         
         if not book.check_avaliability():
-            return False, "Book not avaliable"
+            return False, "Book not avaliable", None
         
         if user.active_loan_count() >= User.MAX_LOANS:
             return False, "Maximum loans reached"
@@ -276,8 +276,25 @@ class LibraryManager:
         user.loans.append(new_loan)
         self.loans.append(new_loan)
         
-        return True, "Book borrowed successfully"
+        return True, "Book borrowed successfully", new_loan
     
+    def find_active_loan(self, member_id, ISBN):
+        """
+        finds an active loan using a member ID+ISBN
+        returns;:loan object, else None
+        """
+
+        user = self.search_user(member_id)
+
+        if user is None:
+            return None
+        
+        for loan in user.loans: #loop through loans and confirm if isbn exists or not
+            if loan.book.ISBN == ISBN and loan.is_active:
+                return loan
+            
+        return None
+
     def return_book(self, loan):
         """returns a loan 
 

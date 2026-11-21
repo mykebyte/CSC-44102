@@ -32,13 +32,13 @@ def test_borrow_book_unavaliable():
     lib = LibraryManager()
 
     success, message, user1 = lib.create_user("a", "a@e.com" )
-    book = Book("123", "pyth", "fds sd", "dsds", 1242, 2)
+    book = Book("123", "pyth", "fds sd", "dsds", 1242, 0)
 
     lib.add_book(book)
 
     success, message, loan = lib.borrow_book(user1, book)
 
-    assert success is True
+    assert success is False
     assert loan is None
     assert book.avaliable_copies == 0
     assert len(lib.loans) == 0
@@ -96,3 +96,56 @@ def test_search_user_unknown():
     found_user = lib.search_user("M999")
 
     assert found_user is None
+
+
+def test_find_active_loan():
+    """checks to see if an active loan can be foudn using a vliad ID+ISBN"""
+    lib = LibraryManager()
+
+    success, message, user1 = lib.create_user("a", "a@email.com")
+    book = Book("123", "pyth", "fds sd", "dsds", 1242, 2)
+
+    
+    lib.add_book(book)
+
+    success, message, loan = lib.borrow_book(user1, book)
+
+    loan_found = lib.find_active_loan("M001","123")
+
+    assert loan_found is loan
+
+def test_find_active_loan_unknown():
+    """checks None is returned when no matching loan is exists"""
+
+    lib = LibraryManager()
+    
+    loan_found = lib.find_active_loan("M999","543")
+
+    assert loan_found is None
+
+
+def test_find_returned_loan():
+    """checks to see if returned loans cant be found as active loans"""
+    lib = LibraryManager()
+
+    success, message, user1 = lib.create_user("a", "a@email.com")
+    book = Book("123", "pyth", "fds sd", "dsds", 2026, 2)
+
+    
+    lib.add_book(book)
+
+    success, message, loan = lib.borrow_book(user1, book)
+
+    lib.return_book(loan)
+
+    loan_found = lib.find_active_loan("M001","123")
+
+    assert loan_found is None
+
+
+
+
+
+
+
+
