@@ -102,8 +102,6 @@ class User:
     def show_user_info(self):
         """Returns member's ID, name and email."""
         return self.member_id, self.name, self.email 
-s
-
 
 class Loan:
     """Represents the book loan and manages its return and renewal."""
@@ -264,7 +262,7 @@ class LibraryManager:
             return False, "User doesn't exist"
         
         if book not in self.books: #see if book exists
-                return False, "Book doesn't exist"
+            return False, "Book doesn't exist"
         
         if not book.check_avaliability():
             return False, "Book not avaliable"
