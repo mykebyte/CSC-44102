@@ -19,10 +19,10 @@ def make_loan_setup(copies=2):
 
     lib.add_book(book)
 
-    success, message, new_user = lib.borrow_book(user1, book)
+    success, message, loan = lib.borrow_book(user1, book)
 
     assert success is True
-    return lib, user1, book, Loan
+    return lib, user1, book, loan
 
 
 def test_return_book():
@@ -44,21 +44,21 @@ def test_return_book_twice():
 
     success, message = lib.return_book(loan)
 
-    assert success is True
+    assert success is False
     assert book.avaliable_copies == copies_after_return
 
 
 def test_renew_loan():
     lib, user1, book, loan = make_loan_setup()
 
-    old_due = loan.due.date
+    old_due = loan.due_date
     success, message = lib.renew_loan(loan)
 
     assert success is True
-    assert loan.due_date == old_due + timedelta(days=LOAN_PERIOD)
+    assert loan.due_date == old_due + timedelta(days=Loan.LOAN_PERIOD)
     assert loan.renewals == 1
 
-def renew_loan_x2():
+def test_renew_loan_again():
     """checks a second renrewal fail with due date staing the same"""
     lib, user1, book, loan = make_loan_setup()
 
@@ -82,13 +82,13 @@ def test_renew_overdue_loan():
 
     assert success is False
     assert loan.due_date == old_due
-    assert loan.renewals == 1
+    assert loan.renewals == 0
 
-def test_renew_overdue_loan():
+def test_renew_after_return():
     """checks a RETURNED laon cant be renewed"""
     lib, user1, book, loan = make_loan_setup()
 
-    loan.return_book(loan)
+    lib.return_book(loan)
     old_due = loan.due_date
 
     success, message = lib.renew_loan(loan)
