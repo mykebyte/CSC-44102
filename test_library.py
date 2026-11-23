@@ -212,9 +212,9 @@ def test_borrow_fourth_loan_fails():
 
     books = []
     for ISBN in ["1","2","3","4"]:
-        book.make_book(ISBN)
+        book = make_book(ISBN)
         lib.add_book(book)
-        book.append(book)
+        books.append(book)
 
     for book in books[:3]:
         success, message, loan = lib.borrow_book(user1, book)
@@ -249,13 +249,13 @@ def test_borrow_last_copy():
 def test_find_other_loan_book_is_active():
     """checks None is reutned for a current member who hasnt borrwed the book"""
     lib, user1 = make_lib_with_user()
-    book1 = make_book(123)
-    book2 = make_book(456)
+    book1 = make_book("123")
+    book2 = make_book("456")
     lib.add_book(book1)
     lib.add_book(book2)
 
     lib.borrow_book(user1, book1)
-    loan_found = lib.find_active_loans("M001", "456")
+    loan_found = lib.find_active_loan("M001", "456")
 
     assert loan_found is None
 
