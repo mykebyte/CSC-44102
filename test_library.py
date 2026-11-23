@@ -38,7 +38,7 @@ def test_borrow_book():
     assert loan in user1.loans
 
 def test_borrow_book_unavaliable():
-    """" checks borriwing fials when no copies are avaliable"""
+    """ checks borrowing fails when no copies are avaliable"""
 
     lib, user1 = make_lib_with_user()
 
@@ -52,7 +52,8 @@ def test_borrow_book_unavaliable():
     assert book.avaliable_copies == 0
     assert len(lib.loans) == 0
 
-def test_auto_member_id(): #auto test
+def test_auto_member_id(): 
+    """ Checks member IDs are generated starting from M001"""
     lib = LibraryManager()
 
     success, message, user1 = lib.create_user("a", "a@e.com" )
@@ -81,6 +82,7 @@ def test_invalid_without_id():
     assert user2.member_id == "M001"    
 
 def test_search_user_existing():
+    """ checks an already regisyered member can be found by their Id"""
     lib, user1 = make_lib_with_user()
 
 
@@ -89,7 +91,7 @@ def test_search_user_existing():
     assert found_user is user1
 
 def test_search_user_unknown():
-    
+    """ checks that None is returned for an unknown memebr ID"""
     lib = LibraryManager()
     found_user = lib.search_user("M999")
 
@@ -207,7 +209,7 @@ def test_update_quantity():
 
 
 def test_borrow_fourth_loan_fails():
-    """cheks a member cant have 3+ loans"""
+    """Checks a 4th loan isnt allowed when the member already has 3 loans"""
     lib, user1 = make_lib_with_user()
 
     books = []
@@ -229,7 +231,7 @@ def test_borrow_fourth_loan_fails():
     assert user1.active_loan_count() == 3
 
 def test_borrow_last_copy():
-    """checks teh last copy can be borrowed + make ssure nobody el;se can bottow it"""
+    """checks teh last copy can be borrowed + make ssure nobody else can bottow it"""
     lib, user1 = make_lib_with_user()
     success, message, user2 = lib.create_user("b", "b@e.com" )
     book = make_book(copies=1)
@@ -258,6 +260,20 @@ def test_find_other_loan_book_is_active():
     loan_found = lib.find_active_loan("M001", "456")
 
     assert loan_found is None
+
+def test_update_quantity_below_borrowed():
+    """checks total copies cant be reduced below the number thats currently already borrowed"""
+    lib, user1 = make_lib_with_user()
+    book1 = make_book(copies=2)
+    lib.add_book(book1)
+    lib.borrow_book(user1, book1)
+    
+    success, message = book1.update_quantity(-2)
+
+    assert success is False
+    assert message == "cant remove copies that are borrowed"
+    assert book1.total_copies == 2
+    assert book1.avaliable_copies == 1
 
     
 
