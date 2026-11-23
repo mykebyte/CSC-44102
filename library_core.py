@@ -5,6 +5,7 @@
 
 from datetime import date
 from datetime import timedelta
+from datetime import date, timedelta
 
 # Following the PEP8 style guidfe, all my classes will use pascalCase, constants will use UPPER_CASE, the rest snake_case
 
@@ -309,6 +310,23 @@ class LibraryManager:
         
         return list(user.loans)
 
+    def get_overdue_loans(self):
+
+
+        """returns all overdue loans in the style of overdue first
+        
+        returns a list of loan objects/or empty list if nothing is overdue"""
+        overdue_loans = []
+
+        for loan in self.loans:
+            if loan.check_overdue():
+                overdue_loans.append(loan)
+
+        overdue_loans.sort(key=lambda loan: loan.due_date)
+        return overdue_loans
+
+    
+
     def return_book(self, loan):
         """returns a loan 
 
@@ -350,3 +368,5 @@ class LibraryManager:
             found_users.append(user.show_user_info())
 
         return found_users
+
+
