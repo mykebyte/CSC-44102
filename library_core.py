@@ -53,11 +53,13 @@ class Book:
         currently_borrowed = self.total_copies - self.avaliable_copies
         new_total = self.total_copies + amount
 
+        if new_total < 0:
+            return False, "Total copies cannot be negative"
+
         if new_total < currently_borrowed:
             return False, "cant remove copies that are borrowed"
         
-        if new_total < 0:
-            return False, "Total copies cannot be negative"
+        
 
         self.total_copies = new_total
         self.avaliable_copies = self.total_copies - currently_borrowed
@@ -305,7 +307,7 @@ class LibraryManager:
         if user is None: 
             return []
         
-        return user.loans
+        return list(user.loans)
 
     def return_book(self, loan):
         """returns a loan 
