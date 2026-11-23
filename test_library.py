@@ -4,6 +4,8 @@
 # draft of my work and provide feedback.
 
 from library_core import Book, LibraryManager
+from datetime import date, timedelta
+
 
 def make_book(ISBN="123", copies=2):
     """creates a test book with teh given ISBN, including no.of copies"""
@@ -276,6 +278,83 @@ def test_update_quantity_below_borrowed():
     assert book1.avaliable_copies == 1
 
     
+
+
+def test_overdue_loan_listed():
+    """create an overdue loan which appears in the overdue report"""
+    lib, user1 = make_lib_with_user()
+    book = make_book()
+    lib.add_book(book)
+
+    success, message, loan = lib.borrow_book(user1, book)
+    loan.due_date = date.today() - timedelta(days=1)
+    assert lib.get_overdue_loans() == [loan]
+
+
+def test_normal_loan_not_overdue():
+    """checks only ovedue loans are listed, not ones that arte in date"""
+    lib, user1 = make_lib_with_user()
+    book1 = make_book("123")
+    book2 = make_book("456")
+
+    lib.add_book(book1) 
+    lib.add_book(book2)
+
+
+
+    success, message, overdue_loan = lib.borrow_book(user1, book1)
+    success, message, normal_loan = lib.borrow_book(user1, book2)
+    overdue_loan.due_date = date.today() - timedelta(days=1)
+
+    assert lib.get_overdue_loans() == [overdue_loan]
+
+def test_retruned_overdue_loan_not_listed():
+    """checks a reutned loan isnt listed, even if past its due date"""
+    lib, user1 = make_lib_with_user()
+    book = make_book()
+    lib.add_book(book) 
+
+    success, message, loan = lib.borrow_book(user1, book)
+    loan.due_date = date.today() - timedelta(days=1)
+    lib.return_book(loan)
+
+
+    assert lib.get_overdue_loans() == []
+
+def test_no_overdue_loans():
+    """checks the empty list is retuend when no overdue loans"""
+
+    lib, user1 = make_lib_with_user()
+    book = make_book()
+    lib.add_book(book) 
+
+    lib.borrow_book(user1,book)
+    assert lib.get_overdue_loans() == []
+
+
+def test_overdue_loans_olderst_first():
+    """checks the order of overdue loans (which one comes first)"""
+    lib, user1 = make_lib_with_user()
+    book1 = make_book("123")
+    book2 = make_book("456")
+
+    lib.add_book(book1) 
+    lib.add_book(book2)
+
+
+
+    success, message, recent_loan = lib.borrow_book(user1, book1)
+    success, message, oldest_loan = lib.borrow_book(user1, book2)
+    recent_loan.due_date = date.today() - timedelta(days=1)
+    oldest_loan.due_date = date.today() - timedelta(days=2)
+
+    assert lib.get_overdue_loans() == [oldest_loan, recent_loan]
+
+
+
+
+
+
 
 
 
