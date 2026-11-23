@@ -37,6 +37,7 @@ def test_return_book():
     assert book.avaliable_copies == old_copies + 1
 
 def test_return_book_twice():
+    """checks returnign teh same loan again fails + doesnt add an extra copy"""
     lib, user1, book, loan = make_loan_setup()
 
     lib.return_book(loan)
@@ -49,6 +50,7 @@ def test_return_book_twice():
 
 
 def test_renew_loan():
+    """checks renewing an active loan adds a loan period to teh due date"""
     lib, user1, book, loan = make_loan_setup()
 
     old_due = loan.due_date
