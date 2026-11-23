@@ -1,20 +1,289 @@
-from library_core import *
+# GenAI acknowledgement:
+# I acknowledge the use of ChatGPT (version Astra 6, OpenAI, https://chatgpt.com/)
+# and Claude (Claude Opus 5.5, Anthropic, https://claude.ai/) to review a
+# draft of my work and provide feedback.
 
-lib = LibraryManager()
+from library_core import Book, LibraryManager
 
-user = User("1","a","j@email.com")
-book = Book("123", "pyth", "fds sd", "dsfs", 1242, 2)
+def make_book(ISBN="123", copies=2):
+    """creates a test book with teh given ISBN, including no.of copies"""
+    return Book(ISBN, "pyth", "fds sd", "dsds", 1242, copies)
 
-lib.create_user(user)
-lib.add_book(book)
+def make_lib_with_user():
+    """creates library with a  registered memebr
+    
+    returns lib, user1"""
+    lib = LibraryManager()
+    success, message, user1 = lib.create_user("a", "a@e.com" )
+    return lib, user1
 
-old_copies = book.avaliable_copies
-result = lib.borrow_book(user, book)
+def test_borrow_book():
+    """checks that borrowing a book actually reduces its avaliable copies + records the loan"""
+
+    lib, user1 = make_lib_with_user()
+    book = make_book()
+
+    lib.add_book(book)
+
+    old_copies = book.avaliable_copies
+
+    success, message, loan = lib.borrow_book(user1, book)
+
+    assert success is True
+    assert loan is not None
+    assert loan.user is user1
+    assert loan.book is book
+    assert book.avaliable_copies == old_copies - 1
+    assert loan in lib.loans
+    assert loan in user1.loans
+
+def test_borrow_book_unavaliable():
+    """ checks borrowing fails when no copies are avaliable"""
+
+    lib, user1 = make_lib_with_user()
+
+    book = make_book(copies=0)
+
+    lib.add_book(book)
+    success, message, loan = lib.borrow_book(user1, book)
+
+    assert success is False
+    assert loan is None
+    assert book.avaliable_copies == 0
+    assert len(lib.loans) == 0
+
+def test_auto_member_id(): 
+    """ Checks member IDs are generated starting from M001"""
+    lib = LibraryManager()
+
+    success, message, user1 = lib.create_user("a", "a@e.com" )
+
+    assert success is True
+    assert user1.member_id == "M001"
+
+    success, message, user2 = lib.create_user("b", "b@e.com")
+
+    assert success is True
+    assert user2.member_id == "M002"
+
+def test_invalid_without_id():
+    """checks the failed registration doesnt use waste member ID."""
+    lib = LibraryManager()
+
+    success, message, user1 = lib.create_user("a", "bERROR")
+
+    assert success is False 
+    assert user1 is None
+
+    success, message, user2 = lib.create_user("b", "b@email.com")
+
+    assert success is True 
+    
+    assert user2.member_id == "M001"    
+
+def test_search_user_existing():
+    """ checks an already regisyered member can be found by their Id"""
+    lib, user1 = make_lib_with_user()
 
 
-assert book.avaliable_copies == old_copies - 1
-assert result[0] is True
-assert book.avaliable_copies == old_copies
+    found_user = lib.search_user("M001")
+
+    assert found_user is user1
+
+def test_search_user_unknown():
+    """ checks that None is returned for an unknown memebr ID"""
+    lib = LibraryManager()
+    found_user = lib.search_user("M999")
+
+    assert found_user is None
 
 
-print("Borrow test passed!")
+def test_find_active_loan():
+    """checks to see if an active loan can be foudn using a vliad ID+ISBN"""
+    lib, user1 = make_lib_with_user()
+
+    book = make_book()
+    lib.add_book(book)
+
+    success, message, loan = lib.borrow_book(user1, book)
+
+    loan_found = lib.find_active_loan("M001","123")
+
+    assert loan_found is loan
+
+def test_find_active_loan_unknown():
+    """checks None is returned when no matching loan is exists"""
+
+    lib = LibraryManager()
+    
+    loan_found = lib.find_active_loan("M999","543")
+
+    assert loan_found is None
+
+
+def test_find_returned_loan():
+    """checks to see if returned loans cant be found as active loans"""
+    lib, user1 = make_lib_with_user()
+    book = make_book()
+
+    lib.add_book(book)
+    success, message, loan = lib.borrow_book(user1, book)
+    lib.return_book(loan)
+    loan_found = lib.find_active_loan("M001","123")
+
+    
+    assert loan_found is None
+
+
+def test_get_user_loans():
+    """checks all loans are returned """
+
+    lib, user1 = make_lib_with_user()
+    book1 = make_book("123")
+    book2 = make_book("456")
+
+    lib.add_book(book1) 
+    lib.add_book(book2)
+
+
+
+    success, message, loan1 = lib.borrow_book(user1, book1)
+    success, message, loan2 = lib.borrow_book(user1, book2)
+
+    user_loans = lib.get_user_loans("M001")
+
+    assert len(user_loans) == 2
+    assert user_loans[0] is loan1
+    assert user_loans[1] is loan2
+
+
+def test_get_user_loans_returns_copy():
+    """cheks that changing the returned list doesnt change the memebrs acutal laosn
+    
+    """
+    lib, user1 = make_lib_with_user()
+
+    book = make_book()
+    lib.add_book(book)
+
+    lib.borrow_book(user1, book)
+    user_loans = lib.get_user_loans("M001")
+    user_loans.clear()
+
+    assert len(user1.loans) == 1
+
+def test_loan_includes_return():
+    """checks teh loans are in the loan history"""
+
+    lib, user1 = make_lib_with_user()
+
+    book = make_book()
+    lib.add_book(book)
+
+    success, message, loan = lib.borrow_book(user1, book)
+    lib.return_book(loan)
+
+    user_loans = lib.get_user_loans("M001")
+
+    assert len(user_loans) == 1
+    assert user_loans[0] is loan
+    assert user_loans[0].is_active is False
+
+
+def test_get_user_loans_unknown():
+    """checks empty list is returned for the unknwon member"""
+    lib = LibraryManager()
+    user_loans = lib.get_user_loans("M999")
+
+    assert user_loans == []
+    
+def test_update_quantity():
+    """checks reducing total copies below - gives neg-total message"""
+    book = make_book(copies=2)
+
+    success, message = book.update_quantity(-3)
+
+    assert success is False
+    assert message == "Total copies cannot be negative"
+    assert book.total_copies == 2 
+
+
+def test_borrow_fourth_loan_fails():
+    """Checks a 4th loan isnt allowed when the member already has 3 loans"""
+    lib, user1 = make_lib_with_user()
+
+    books = []
+    for ISBN in ["1","2","3","4"]:
+        book = make_book(ISBN)
+        lib.add_book(book)
+        books.append(book)
+
+    for book in books[:3]:
+        success, message, loan = lib.borrow_book(user1, book)
+        assert success is True
+
+
+    success, message, loan = lib.borrow_book(user1, books[3])
+
+    assert success is False
+    assert loan is None
+    assert books[3].avaliable_copies == 2
+    assert user1.active_loan_count() == 3
+
+def test_borrow_last_copy():
+    """checks teh last copy can be borrowed + make ssure nobody else can bottow it"""
+    lib, user1 = make_lib_with_user()
+    success, message, user2 = lib.create_user("b", "b@e.com" )
+    book = make_book(copies=1)
+    lib.add_book(book
+                 )
+    
+    success, message, loan1 = lib.borrow_book(user1, book)
+    assert success is True
+    assert book.avaliable_copies == 0
+
+    success, message, loan2 = lib.borrow_book(user2, book)
+
+    assert success is False
+    assert loan2 is None
+    assert book.avaliable_copies == 0
+
+def test_find_other_loan_book_is_active():
+    """checks None is reutned for a current member who hasnt borrwed the book"""
+    lib, user1 = make_lib_with_user()
+    book1 = make_book("123")
+    book2 = make_book("456")
+    lib.add_book(book1)
+    lib.add_book(book2)
+
+    lib.borrow_book(user1, book1)
+    loan_found = lib.find_active_loan("M001", "456")
+
+    assert loan_found is None
+
+def test_update_quantity_below_borrowed():
+    """checks total copies cant be reduced below the number thats currently already borrowed"""
+    lib, user1 = make_lib_with_user()
+    book1 = make_book(copies=2)
+    lib.add_book(book1)
+    lib.borrow_book(user1, book1)
+    
+    success, message = book1.update_quantity(-2)
+
+    assert success is False
+    assert message == "cant remove copies that are borrowed"
+    assert book1.total_copies == 2
+    assert book1.avaliable_copies == 1
+
+    
+
+
+
+
+
+
+
+
+
+
+
