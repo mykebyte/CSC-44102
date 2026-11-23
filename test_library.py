@@ -5,12 +5,23 @@
 
 from library_core import Book, LibraryManager
 
-def test_borrow_book():
-    """Checks that borrowing a book actually reduces its available copies"""
-    lib = LibraryManager()
+def make_book(ISBN="123", copies=2):
+    """creates a test book with teh given ISBN, including no.of copies"""
+    return Book(ISBN, "pyth", "fds sd", "dsds", 1242, copies)
+
+def make_lib_with_user():
+    """creates library with a  registered memebr
     
+    returns lib, user1"""
+    lib = LibraryManager()
     success, message, user1 = lib.create_user("a", "a@e.com" )
-    book = Book("123", "pyth", "fds sd", "dsds", 1242, 2)
+    return lib, user1
+
+def test_borrow_book():
+    """checks that borrowing a book actually reduces its avaliable copies + records the loan"""
+
+    lib, user1 = make_lib_with_user()
+    book = make_book()
 
     lib.add_book(book)
 
@@ -29,13 +40,11 @@ def test_borrow_book():
 def test_borrow_book_unavaliable():
     """" checks borriwing fials when no copies are avaliable"""
 
-    lib = LibraryManager()
+    lib, user1 = make_lib_with_user()
 
-    success, message, user1 = lib.create_user("a", "a@e.com" )
-    book = Book("123", "pyth", "fds sd", "dsds", 1242, 0)
+    book = make_book(copies=0)
 
     lib.add_book(book)
-
     success, message, loan = lib.borrow_book(user1, book)
 
     assert success is False
@@ -71,20 +80,9 @@ def test_invalid_without_id():
     
     assert user2.member_id == "M001"    
 
-def test_successful_returnid():
-    lib = LibraryManager()
-    success, message, user1 = lib.create_user("a", "a@email.com")
-
-    
-
-    assert success is True 
-    assert user1 is not None
-    assert user1.member_id == "M001"    
-
 def test_search_user_existing():
-    lib = LibraryManager()
+    lib, user1 = make_lib_with_user()
 
-    success, message, user1 = lib.create_user("a", "a@email.com")
 
     found_user = lib.search_user("M001")
 
@@ -100,12 +98,9 @@ def test_search_user_unknown():
 
 def test_find_active_loan():
     """checks to see if an active loan can be foudn using a vliad ID+ISBN"""
-    lib = LibraryManager()
+    lib, user1 = make_lib_with_user()
 
-    success, message, user1 = lib.create_user("a", "a@email.com")
-    book = Book("123", "pyth", "fds sd", "dsds", 1242, 2)
-
-    
+    book = make_book()
     lib.add_book(book)
 
     success, message, loan = lib.borrow_book(user1, book)
@@ -126,35 +121,29 @@ def test_find_active_loan_unknown():
 
 def test_find_returned_loan():
     """checks to see if returned loans cant be found as active loans"""
-    lib = LibraryManager()
+    lib, user1 = make_lib_with_user()
+    book = make_book()
 
-    success, message, user1 = lib.create_user("a", "a@email.com")
-    book = Book("123", "pyth", "fds sd", "dsds", 2026, 2)
-
-    
     lib.add_book(book)
-
     success, message, loan = lib.borrow_book(user1, book)
-
     lib.return_book(loan)
-
     loan_found = lib.find_active_loan("M001","123")
 
+    
     assert loan_found is None
 
 
 def test_get_user_loans():
     """checks all loans are returned """
 
-    lib = LibraryManager()
-
-    success, message, user1 = lib.create_user("a", "a@email.com")
-
-    book1 = Book("123", "pyth", "fds sd", "dsds", 2026, 2)
-    book2 = Book("456", "java", "htgfsd sdf", "fdgs", 2026, 2)
+    lib, user1 = make_lib_with_user()
+    book1 = make_book("123")
+    book2 = make_book("456")
 
     lib.add_book(book1) 
     lib.add_book(book2)
+
+
 
     success, message, loan1 = lib.borrow_book(user1, book1)
     success, message, loan2 = lib.borrow_book(user1, book2)
@@ -169,17 +158,13 @@ def test_get_user_loans():
 def test_loan_includes_return():
     """checks teh loans are in the loan history"""
 
-    lib = LibraryManager()
+    lib, user1 = make_lib_with_user()
 
-    success, message, user1 = lib.create_user("a", "a@email.com")
-    book = Book("123", "pyth", "fds sd", "dsds", 2026, 2)
+    book = make_book()
     lib.add_book(book)
 
     success, message, loan = lib.borrow_book(user1, book)
-
     lib.return_book(loan)
-
-
 
     user_loans = lib.get_user_loans("M001")
 
