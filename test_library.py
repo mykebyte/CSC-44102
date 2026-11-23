@@ -155,6 +155,21 @@ def test_get_user_loans():
     assert user_loans[1] is loan2
 
 
+def test_get_user_loans_returns_copy():
+    """cheks that changing the returned list doesnt change the memebrs acutal laosn
+    
+    """
+    lib, user1 = make_lib_with_user()
+
+    book = make_book()
+    lib.add_book(book)
+
+    lib.borrow_book(user1, book)
+    user_loans = lib.get_user_loans("M001")
+    user_loans.clear()
+
+    assert len(user1.loans) == 1
+
 def test_loan_includes_return():
     """checks teh loans are in the loan history"""
 
