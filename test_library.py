@@ -195,6 +195,72 @@ def test_get_user_loans_unknown():
 
     assert user_loans == []
     
+def test_update_quantity():
+    """checks reducing total copies below - gives neg-total message"""
+    book = make_book(copies=2)
+
+    success, message = book.update_quantity(-3)
+
+    assert success is False
+    assert message == "Total copies cannot be negative"
+    assert book.total_copies == 2 
+
+
+def test_borrow_fourth_loan_fails():
+    """cheks a member cant have 3+ loans"""
+    lib, user1 = make_lib_with_user()
+
+    books = []
+    for ISBN in ["1","2","3","4"]:
+        book.make_book(ISBN)
+        lib.add_book(book)
+        book.append(book)
+
+    for book in books[:3]:
+        success, message, loan = lib.borrow_book(user1, book)
+        assert success is True
+
+
+    success, message, loan = lib.borrow_book(user1, books[3])
+
+    assert success is False
+    assert loan is None
+    assert books[3].avaliable_copies == 2
+    assert user1.active_loan_count() == 3
+
+def test_borrow_last_copy():
+    """checks teh last copy can be borrowed + make ssure nobody el;se can bottow it"""
+    lib, user1 = make_lib_with_user()
+    success, message, user2 = lib.create_user("b", "b@e.com" )
+    book = make_book(copies=1)
+    lib.add_book(book
+                 )
+    
+    success, message, loan1 = lib.borrow_book(user1, book)
+    assert success is True
+    assert book.avaliable_copies == 0
+
+    success, message, loan2 = lib.borrow_book(user2, book)
+
+    assert success is False
+    assert loan2 is None
+    assert book.avaliable_copies == 0
+
+def test_find_other_loan_book_is_active():
+    """checks None is reutned for a current member who hasnt borrwed the book"""
+    lib, user1 = make_lib_with_user()
+    book1 = make_book(123)
+    book2 = make_book(456)
+    lib.add_book(book1)
+    lib.add_book(book2)
+
+    lib.borrow_book(user1, book1)
+    loan_found = lib.find_active_loans("M001", "456")
+
+    assert loan_found is None
+
+    
+
 
 
 
