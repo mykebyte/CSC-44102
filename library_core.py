@@ -10,9 +10,21 @@ from datetime import date, timedelta
 SEPERATOR = "|"
 
 def write_record(file, values):
-    """Writes the values to teh file, to make it 1 line"""
+    """Writes the values to the file, to make it 1 line"""
     line = "|".join((str(value)) for value in values)
     file.write(line + "\n")
+
+def read_lines(filename):
+    """read the lines from the file, or None if the file dosen't exist"""
+    try:
+        with open(filename, "r", encoding="utf-8") as file:
+            lines = file.read_lines()
+        return [line.strip() for line in lines if line.strip()]
+    
+    except FileNotFoundError:
+        return None
+    
+
 
 # Following the PEP8 style guide, all my classes will use pascalCase, constants will use UPPER_CASE, the rest snake_case
 
@@ -35,6 +47,10 @@ class Book:
         
         if not isinstance(total_copies, int) or isinstance(total_copies, bool) or total_copies < 0:
             raise ValueError("ERROR: Total copies be non-negative")
+        
+        if not isinstance(year, int) or isinstance(year, bool):
+            raise ValueError("ERROR: Total copies be non-negative")
+
 
         self.ISBN = ISBN
         self.title = title
