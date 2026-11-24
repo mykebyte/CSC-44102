@@ -112,14 +112,23 @@ class Loan:
     MAX_RENEWALS = 1
 
 
-    def __init__(self, user, book):
-        """Creates the loan with a borrowing date and a 14day expiry"""
+    def __init__(self, user, book, loan_date = None, due_date = None, renewals = 0, is_active = True ):
+        """Creates the loan with a borrowing date and a 14day expiry period
+
+        when loading from the file, the loan/due date, renewals and active status are passed
+        in and used. if not, the loan jsut starts on the current day (today), has no renewals
+        and is active
+        loaded loans pass in their saved values ionstead"""
         self.user = user
         self.book = book
-        self.loan_date = date.today() # find when the book as actually borrowed
-        self.due_date = self.loan_date + timedelta(days=self.LOAN_PERIOD) #fiond due date
-        self.renewals = 0
-        self.is_active = True 
+    
+        # decided with defualting to None, instead of date.today() as a default value
+        # is only worked out when the program acutally startts; meaning each loan would get 
+        #this specific date
+        self.loan_date = loan_date if loan_date is not None else date.today() # find when the book as actually borrowed
+        self.due_date = due_date if due_date is not None else self.loan_date + timedelta(days=self.LOAN_PERIOD) #fiond due date
+        self.renewals = renewals
+        self.is_active = is_active
 
     def check_overdue(self): 
         """Checks if a active loan is passed its due date."""
