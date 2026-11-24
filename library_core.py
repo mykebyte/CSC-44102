@@ -235,6 +235,17 @@ class LibraryManager:
                    
         return None # Added didnce hte method searches for a yuserm so either return no usr or none
 
+    def find_book(self, ISBN):
+        """finds book by its ISBN
+        
+        returns either the Book, or None if not found"""
+        ISBN = str(ISBN)
+
+        for book in self.books:
+            if str(book.ISBN) == ISBN:
+                return book
+        return None
+    
 
     
     def remove_book(self, ISBN):
