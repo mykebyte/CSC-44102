@@ -7,7 +7,14 @@ from datetime import date
 from datetime import timedelta
 from datetime import date, timedelta
 
-# Following the PEP8 style guidfe, all my classes will use pascalCase, constants will use UPPER_CASE, the rest snake_case
+SEPERATOR = "|"
+
+def write_record(file, values):
+    """Writes the values to teh file, to make it 1 line"""
+    line = "|".join((str(value)) for value in values)
+    file.write(line + "\n")
+
+# Following the PEP8 style guide, all my classes will use pascalCase, constants will use UPPER_CASE, the rest snake_case
 
 
 # Initilise the Book class, given it key detials such as ISBN, title, author, genre, year, total_copies
@@ -21,6 +28,10 @@ class Book:
         """Initialises the book with its details and copy quantities."""
         if not ISBN or not title or not author:
             raise ValueError("ERROR: - ISBB, title and author required")
+        
+        for value in (ISBN, title, author, genre):
+            if "|" in str(value) or "\n" in str(value):
+                raise ValueError("Dont use | or new lines when making book details.")
         
         if not isinstance(total_copies, int) or isinstance(total_copies, bool) or total_copies < 0:
             raise ValueError("ERROR: Total copies be non-negative")
@@ -86,6 +97,9 @@ class User:
         
         if "@" not in email or "." not in email:
             raise ValueError("enter email")
+        
+        if "|" in name or "|" in email:
+            raise ValueError("Nmae and email cant contain the seperator: '|'. ")
 
         self.member_id = str(member_id)
         self.name = name
@@ -390,3 +404,30 @@ class LibraryManager:
         return found_users
 
 
+    def save_data(self, books_file, members_file, loans_file):
+        """save all books, member and loans to their files"""
+
+        try:
+            with open(books_file, "w", encoding="utf-8") as file:
+                for book in self.books:
+                #save book details.
+                    write_record(file, [book.ISBN, book.title, book.author, book.genre, book.year, 
+                                    book.total_copies])
+
+            with open(members_file, "w", encoding="utf-8") as file:
+                 for user in self.users:
+                    #save member details.
+                    write_record(file, [user.member_id, user.name, user.email])
+
+            with open(loans_file, "w", encoding="utf-8") as file:
+                for loan in self.loans:
+                    # save IDs so they can backtrack back to books and members
+                    write_record(file, [loan.user.member_id, loan.book.ISBN, loan.loan_date.isoformat(),
+                                        loan.due_date.isoformat(), loan.renewals, loan.is_active])
+
+
+        except OSError as error:
+            return False, error
+
+        return True, "Data saved successfully"
+ 
