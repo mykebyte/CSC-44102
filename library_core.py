@@ -481,6 +481,10 @@ class LibraryManager:
         skipped += self.load_members(member_lines or [])
         skipped += self.load_loans(loan_lines or [])
 
+        self.recalculate_copies() 
+        #added this now, as well as changing load_data
+        # sets every books avaliable copies to teh correct number, after they load
+        
 
         line_word = "line" if skipped == 1 else "lines"
 
@@ -598,6 +602,13 @@ class LibraryManager:
                 count += 1
 
         return count
+    
+    def recalculate_copies(self):
+        """sents each books avaliable copies from its active loans
+        
+        returned loans fotn count; therefore, cant reduce avaliabiltiy"""
+        for book in self.books:
+            book.avaliable_copies = book.total_copies - self.count_active_loans(book)
 
 
 
