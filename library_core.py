@@ -462,6 +462,7 @@ class LibraryManager:
         self.books = []
         self.users = []
         self.loans = []
+        self.next_member_no = 1
 
         try:
             book_lines = read_lines(books_file)
@@ -482,9 +483,11 @@ class LibraryManager:
         skipped += self.load_loans(loan_lines or [])
 
         self.recalculate_copies() 
-        #added this now, as well as changing load_data
+        #added this now, as since copie arent saved, they're worked out from the loans that are loaded
         # sets every books avaliable copies to teh correct number, after they load
-        
+
+        # same as above, the coutner isnt saved, so new members continue from highest saved ID
+        self.restore_member_counter()
 
         line_word = "line" if skipped == 1 else "lines"
 
@@ -561,7 +564,7 @@ class LibraryManager:
                 if len(fields) != 6: #6 since each book has 6 fields in teh saved file
                     raise ValueError("Wrong no. of fields!")
 
-                member_id, ISBN, loan_data, due_date, renewals, active = fields
+                member_id, ISBN, loan_date, due_date, renewals, active = fields
 
                 user = self.search_user(member_id)
                 book = self.find_book(ISBN)
@@ -610,6 +613,17 @@ class LibraryManager:
         for book in self.books:
             book.avaliable_copies = book.total_copies - self.count_active_loans(book)
 
+    def restore_member_counter(self):
+        """sets the next member number to the highest saved one +1, or 1 if none"""
+        highest = 0
+
+        for user in self.users:
+            # compared aws number, so m1000 counts as higher than m999
+            number = int(user.member_id[1:])
+            if number > highest:
+                highest = number
+
+        self.next_member_no = highest + 1
 
 
 
