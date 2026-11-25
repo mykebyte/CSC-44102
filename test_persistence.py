@@ -67,13 +67,13 @@ def test_save_load_roundtrip(tmp_path):
     success,message,usernew = new_lib.create_user("Bob", "b@e.com")
     assert usernew.member_id == "M002"
 
-def test_loa_no_saved_files(tmp_path):
+def test_load_no_saved_files(tmp_path):
     """checks loading with no data files actually works and leave the lib empty"""
     lib = LibraryManager()
     success, message = lib.load_data(tmp_path / "books.txt", tmp_path / "members.txt", tmp_path / "loans.txt")
     
     assert success is True
-    assert message == "No saved data avaliable"
+    assert message == "No saved data available"
     #
     assert len(lib.books) == 0
     assert len(lib.users) == 0

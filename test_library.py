@@ -273,12 +273,9 @@ def test_update_quantity_below_borrowed():
     success, message = book1.update_quantity(-2)
 
     assert success is False
-    assert message == "cant remove copies that are borrowed"
+    assert message == "Can't remove copies that are borrowed"
     assert book1.total_copies == 2
     assert book1.avaliable_copies == 1
-
-    
-
 
 def test_overdue_loan_listed():
     """create an overdue loan which appears in the overdue report"""

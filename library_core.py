@@ -1,5 +1,5 @@
 # GenAI acknowledgement:
-# I acknowledge the use of ChatGPT (version ___, OpenAI, https://chatgpt.com/)
+# I acknowledge the use of ChatGPT (version Astra 6, OpenAI, https://chatgpt.com/)
 # and Claude (Claude Opus 5.5, Anthropic, https://claude.ai/) to review a
 # draft of my work and provide feedback.
 
@@ -38,17 +38,17 @@ class Book:
     def __init__(self, ISBN, title, author, genre, year, total_copies):
         """Initialises the book with its details and copy quantities."""
         if not ISBN or not title or not author:
-            raise ValueError("ERROR: - ISBB, title and author required")
+            raise ValueError("ISBN, title and author are required")
         
         for value in (ISBN, title, author, genre):
             if "|" in str(value) or "\n" in str(value):
-                raise ValueError("Dont use | or new lines when making book details.")
+                raise ValueError("Book details can't contain | or new lines")
         
         if not isinstance(total_copies, int) or isinstance(total_copies, bool) or total_copies < 0:
-            raise ValueError("ERROR: Total copies be non-negative")
+            raise ValueError("Total copies must be a non-negative whole number!")
         
         if not isinstance(year, int) or isinstance(year, bool):
-            raise ValueError("ERROR: Total copies be non-negative")
+            raise ValueError("Total copies must be a non-negative whole number!")
 
 
         self.ISBN = ISBN
@@ -84,7 +84,7 @@ class Book:
             return False, "Total copies cannot be negative"
 
         if new_total < currently_borrowed:
-            return False, "cant remove copies that are borrowed"
+            return False, "Can't remove copies that are borrowed"
         
         
 
@@ -108,13 +108,13 @@ class User:
         and raises a ValueError if the required details /email validation fail.
         """
         if not member_id or not name or not email:
-            raise ValueError("ERROR: memmerb id, or name or email is required")
+            raise ValueError("Member ID, name and email are required")
         
         if "@" not in email or "." not in email:
-            raise ValueError("enter email")
+            raise ValueError("Email must contain @ and .")
         
         if "|" in name or "|" in email:
-            raise ValueError("Nmae and email cant contain the SEPARATOR: '|'. ")
+            raise ValueError("Name and email can't contain '|' or new lines: '|'. ")
 
         self.member_id = str(member_id)
         self.name = name
@@ -201,7 +201,7 @@ class Loan:
         
         self.book.avaliable_copies += 1
 
-        return True, "Book returned succesffully"
+        return True, "Book returned successfully"
 
 
 class LibraryManager:
@@ -233,7 +233,7 @@ class LibraryManager:
         self.users.append(new_user)
         self.next_member_no += 1
 
-        return True, "User addedd successfully", new_user
+        return True, "User added successfully", new_user
 
     def search_book(self, title):
         """finds books whose titles contain the supplied search text
@@ -295,13 +295,13 @@ class LibraryManager:
             if book.ISBN == ISBN:
 
                 if book.avaliable_copies != book.total_copies:
-                    return False, "Can't remove book because its borrowed"
+                    return False, "Can't remove book because it's borrowed"
                 
                 self.books.remove(book)
 
-                return True, "Book succesfully removed"
+                return True, "Book successfully removed"
 
-        return False, "Book no exists"
+        return False, "Book doesn't exist"
     
     def borrow_book(self, user, book):
         """creates a loan if the member and book are valid
@@ -317,7 +317,7 @@ class LibraryManager:
             return False, "Book doesn't exist", None
         
         if not book.check_avaliability():
-            return False, "Book not avaliable", None
+            return False, "Book not available", None
         
         if user.active_loan_count() >= User.MAX_LOANS:
             return False, "Maximum loans reached", None
@@ -447,22 +447,16 @@ class LibraryManager:
         return True, "Data saved successfully"
  
     def load_data(self, books_file, members_file, loans_file):
-        """ loads books/members/loans from files into empty library
-        
-        Plan:
+        """ loads books and members and loans from files into library
 
-        Replaces whatever the library holds since it clears the lists
-        If the files dont exist,m library is just left empty and it return success 
+         - This Replaces whatever the library holds since it clears the lists
+        - If the files dont exist, the library is just left empty and it return success 
         with a "no saved data" message
-        "Bad lines are skipped, the actual message says how many
+        - "Bad lines are skipped, the actual message says how many
         If a file cant be read (OSError), it returns faliure w/ a message
 
          
         """
-        self.books = []
-        self.users = []
-        self.loans = []
-        self.next_member_no = 1
 
         try:
             book_lines = read_lines(books_file)
@@ -471,10 +465,14 @@ class LibraryManager:
 
         # handles problem reading the files
         except(OSError, UnicodeDecodeError) as error:
-            return False, f"Cant read the data: {error}"
+            return False, f"Can't read the data: {error}"
+        self.books = []
+        self.users = []
+        self.loans = []
+        self.next_member_no = 1
 
-        if book_lines is None and member_lines is None:
-            return True, "No saved data avaliable"
+        if book_lines is None and member_lines is None and loan_lines is None:
+            return True, "No saved data available"
 
 
         #load books+members first so loans can find their IDs
@@ -492,7 +490,7 @@ class LibraryManager:
         line_word = "line" if skipped == 1 else "lines"
 
         return True, (
-            f"Loaded {len(self.books)} books, {len(self.users)} members "
+            f"Loaded {len(self.books)} books, {len(self.users)} members, "
             f"{len(self.loans)} loans ({skipped} {line_word} skipped)"
         )
 
@@ -505,7 +503,7 @@ class LibraryManager:
             try:
                 fields = line.split(SEPARATOR)
 
-                if len(fields) != 6: #6 since each book has 6 fields in teh saved file
+                if len(fields) != 6: # 6 since each book has 6 fields in the saved file
                     raise ValueError("Wrong no. of fields!")
 
                 ISBN, title, author, genre, year, total_copies = fields
@@ -531,7 +529,7 @@ class LibraryManager:
         for line in lines:
             try:
                 fields = line.split(SEPARATOR)
-                if len(fields) != 3: #3 since each book has 3 fields in its saved file
+                if len(fields) != 3: # 3 since each member has 3 fields in its saved file
                     raise ValueError("Wrong no. of fields!")
 
                 member_id, name, email = fields
@@ -561,7 +559,7 @@ class LibraryManager:
             try:
                 fields = line.split(SEPARATOR)
 
-                if len(fields) != 6: #6 since each book has 6 fields in teh saved file
+                if len(fields) != 6: # 6 since each loan has 6 fields in the saved file
                     raise ValueError("Wrong no. of fields!")
 
                 member_id, ISBN, loan_date, due_date, renewals, active = fields
@@ -583,8 +581,8 @@ class LibraryManager:
 
                 #checlk if enouygh copies for active loans
 
-                if is_active and self.count_active_loans(book) >= book. total_copies:
-                    raise ValueError("No copies avaliable")
+                if is_active and self.count_active_loans(book) >= book.total_copies:
+                    raise ValueError("More active loans than copies")
                 
                 loan = Loan(user, book, loan_date, due_date, renewals, is_active)
 
