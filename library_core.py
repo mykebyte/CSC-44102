@@ -447,7 +447,7 @@ class LibraryManager:
         return True, "Data saved successfully"
  
     def load_data(self, books_file, members_file, loans_file):
-        """ kloads books/members/loans from files into empty library
+        """ loads books/members/loans from files into empty library
         
         Plan:
 
@@ -466,6 +466,7 @@ class LibraryManager:
         try:
             book_lines = read_lines(books_file)
             member_lines = read_lines(members_file)
+            loan_lines = read_lines(loans_file)
 
         # handles problem reading the files
         except(OSError, UnicodeDecodeError) as error:
@@ -478,12 +479,14 @@ class LibraryManager:
         #load books+members first so loans can find their IDs
         skipped = self.load_books(book_lines or [])
         skipped += self.load_members(member_lines or [])
+        skipped += self.load_loans(loan_lines or [])
+
 
         line_word = "line" if skipped == 1 else "lines"
 
         return True, (
             f"Loaded {len(self.books)} books, {len(self.users)} members "
-            f"({skipped} {line_word} skipped)"
+            f"{len(self.loans)} loans ({skipped} {line_word} skipped)"
         )
 
     def load_books(self, lines):
@@ -539,6 +542,63 @@ class LibraryManager:
                 skipped += 1
 
         return skipped
+    
+    def load_loans(self, lines):
+        """rebuilds each loan thats attactched to teh loaded member and the book +
+         counts skipped lines
+          
+         needs to run after load_books and load_members, since it looks both up by ID
+            """
+        skipped = 0
+        for line in lines:
+            try:
+                fields = line.split(SEPARATOR)
+
+                if len(fields) != 6: #6 since each book has 6 fields in teh saved file
+                    raise ValueError("Wrong no. of fields!")
+
+                member_id, ISBN, loan_data, due_date, renewals, active = fields
+
+                user = self.search_user(member_id)
+                book = self.find_book(ISBN)
+
+                if user is None or book is None:
+                    raise ValueError("Member/book not found")
+
+                loan_date = date.fromisoformat(loan_date) 
+                due_date = date.fromisoformat(due_date)       
+                renewals = int(renewals)
+
+                if active not in ("True", "False"):
+                    raise ValueError("Invalid loan status")
+                
+                is_active = active == "True"
+
+                #checlk if enouygh copies for active loans
+
+                if is_active and self.count_active_loans(book) >= book. total_copies:
+                    raise ValueError("No copies avaliable")
+                
+                loan = Loan(user, book, loan_date, due_date, renewals, is_active)
+
+                self.loans.append(loan)
+                user.loans.append(loan)
+
+            except ValueError:
+                skipped += 1
+
+        return skipped
+    
+    def count_active_loans(self, book):
+        """count active loans for a book"""
+        count = 0
+
+        for loan in self.loans:
+            if loan.book is book and loan.is_active:
+                count += 1
+
+        return count
+
 
 
 
