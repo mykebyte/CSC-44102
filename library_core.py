@@ -7,7 +7,7 @@ from datetime import date
 from datetime import timedelta
 from datetime import date, timedelta
 
-SEPERATOR = "|"
+SEPARATOR = "|"
 
 def write_record(file, values):
     """Writes the values to the file, to make it 1 line"""
@@ -114,7 +114,7 @@ class User:
             raise ValueError("enter email")
         
         if "|" in name or "|" in email:
-            raise ValueError("Nmae and email cant contain the seperator: '|'. ")
+            raise ValueError("Nmae and email cant contain the SEPARATOR: '|'. ")
 
         self.member_id = str(member_id)
         self.name = name
@@ -447,7 +447,18 @@ class LibraryManager:
         return True, "Data saved successfully"
  
     def load_data(self, books_file, members_file, loans_file):
-        """ kloads books/members/loans from files into empty library"""
+        """ kloads books/members/loans from files into empty library
+        
+        Plan:
+
+        Replaces whatever the library holds since it clears the lists
+        If the files dont exist,m library is just left empty and it return success 
+        with a "no saved data" message
+        "Bad lines are skipped, the actual message says how many
+        If a file cant be read (OSError), it returns faliure w/ a message
+
+         
+        """
         self.books = []
         self.users = []
         self.loans = []
@@ -482,7 +493,7 @@ class LibraryManager:
         skipped = 0
         for line in lines:
             try:
-                fields = line.split(SEPERATOR)
+                fields = line.split(SEPARATOR)
 
                 if len(fields) != 6: #6 since each book has 6 fields in teh saved file
                     raise ValueError("Wrong no. of fields!")
@@ -509,11 +520,14 @@ class LibraryManager:
         skipped = 0
         for line in lines:
             try:
-                fields = line.split(SEPERATOR)
-                if len(fields) != 3: #6 since each book has 3 fields in its saved file
+                fields = line.split(SEPARATOR)
+                if len(fields) != 3: #3 since each book has 3 fields in its saved file
                     raise ValueError("Wrong no. of fields!")
 
                 member_id, name, email = fields
+
+                if not member_id.startswith("M") or not member_id[1:].isdigit():
+                    raise ValueError("Invalid member ID")
                 
                 if self.search_user(member_id) is not None:
                     raise ValueError("Duplicate member")
