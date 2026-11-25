@@ -18,9 +18,8 @@ def read_lines(filename):
     """read the lines from the file, or None if the file dosen't exist"""
     try:
         with open(filename, "r", encoding="utf-8") as file:
-            lines = file.read_lines()
-        return [line.strip() for line in lines if line.strip()]
-    
+            return [line.strip() for line in file if line.strip()]
+    #a missing file is normal in first run, then no error
     except FileNotFoundError:
         return None
     
@@ -447,3 +446,85 @@ class LibraryManager:
 
         return True, "Data saved successfully"
  
+    def load_data(self, books_file, members_file, loans_file):
+        """ kloads books/members/loans from files into empty library"""
+        self.books = []
+        self.users = []
+        self.loans = []
+
+        try:
+            book_lines = read_lines(books_file)
+            member_lines = read_lines(members_file)
+
+        # handles problem reading the files
+        except(OSError, UnicodeDecodeError) as error:
+            return False, f"Cant read the data: {error}"
+
+        if book_lines is None and member_lines is None:
+            return True, "No saved data avaliable"
+
+
+        #load books+members first so loans can find their IDs
+        skipped = self.load_books(book_lines or [])
+        skipped += self.load_members(member_lines or [])
+
+        line_word = "line" if skipped == 1 else "lines"
+
+        return True, (
+            f"Loaded {len(self.books)} books, {len(self.users)} members "
+            f"({skipped} {line_word} skipped)"
+        )
+
+    def load_books(self, lines):
+        """loads books froms saved file + coutns any skipped lines" 
+
+        """
+        skipped = 0
+        for line in lines:
+            try:
+                fields = line.split(SEPERATOR)
+
+                if len(fields) != 6: #6 since each book has 6 fields in teh saved file
+                    raise ValueError("Wrong no. of fields!")
+
+                ISBN, title, author, genre, year, total_copies = fields
+                
+                book = Book( ISBN, title, author, genre, int(year), int(total_copies))
+
+                #using add_book to check for duplicates 
+                success, message = self.add_book(book)
+
+                if not success: 
+                    raise ValueError(message)
+                
+            except ValueError:
+                skipped += 1
+
+        return skipped
+    
+    def load_members(self, lines):
+        """loads books froms saved file + coutns any skipped lines" 
+
+        """
+        skipped = 0
+        for line in lines:
+            try:
+                fields = line.split(SEPERATOR)
+                if len(fields) != 3: #6 since each book has 3 fields in its saved file
+                    raise ValueError("Wrong no. of fields!")
+
+                member_id, name, email = fields
+                
+                if self.search_user(member_id) is not None:
+                    raise ValueError("Duplicate member")
+
+                #not building this with create_user, since it would make a new ID
+                self.users.append(User(member_id, name, email))
+                
+            except ValueError:
+                skipped += 1
+
+        return skipped
+
+
+
