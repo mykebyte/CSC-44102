@@ -1,5 +1,5 @@
 # GenAI acknowledgement:
-# I acknowledge the use of ChatGPT (version ___, OpenAI, https://chatgpt.com/)
+# I acknowledge the use of ChatGPT (version Astra 6, OpenAI, https://chatgpt.com/)
 # and Claude (Claude Opus 5.5, Anthropic, https://claude.ai/) to review a
 # draft of my work and provide feedback.
 
@@ -7,7 +7,25 @@ from datetime import date
 from datetime import timedelta
 from datetime import date, timedelta
 
-# Following the PEP8 style guidfe, all my classes will use pascalCase, constants will use UPPER_CASE, the rest snake_case
+SEPARATOR = "|"
+
+def write_record(file, values):
+    """Writes the values to the file, to make it 1 line"""
+    line = "|".join((str(value)) for value in values)
+    file.write(line + "\n")
+
+def read_lines(filename):
+    """read the lines from the file, or None if the file dosen't exist"""
+    try:
+        with open(filename, "r", encoding="utf-8") as file:
+            return [line.strip() for line in file if line.strip()]
+    #a missing file is normal in first run, then no error
+    except FileNotFoundError:
+        return None
+    
+
+
+# Following the PEP8 style guide, all my classes will use pascalCase, constants will use UPPER_CASE, the rest snake_case
 
 
 # Initilise the Book class, given it key detials such as ISBN, title, author, genre, year, total_copies
@@ -20,10 +38,18 @@ class Book:
     def __init__(self, ISBN, title, author, genre, year, total_copies):
         """Initialises the book with its details and copy quantities."""
         if not ISBN or not title or not author:
-            raise ValueError("ERROR: - ISBB, title and author required")
+            raise ValueError("ISBN, title and author are required")
+        
+        for value in (ISBN, title, author, genre):
+            if "|" in str(value) or "\n" in str(value):
+                raise ValueError("Book details can't contain | or new lines")
         
         if not isinstance(total_copies, int) or isinstance(total_copies, bool) or total_copies < 0:
-            raise ValueError("ERROR: Total copies be non-negative")
+            raise ValueError("Total copies must be a non-negative whole number!")
+        
+        if not isinstance(year, int) or isinstance(year, bool):
+            raise ValueError("Total copies must be a non-negative whole number!")
+
 
         self.ISBN = ISBN
         self.title = title
@@ -58,7 +84,7 @@ class Book:
             return False, "Total copies cannot be negative"
 
         if new_total < currently_borrowed:
-            return False, "cant remove copies that are borrowed"
+            return False, "Can't remove copies that are borrowed"
         
         
 
@@ -82,10 +108,13 @@ class User:
         and raises a ValueError if the required details /email validation fail.
         """
         if not member_id or not name or not email:
-            raise ValueError("ERROR: memmerb id, or name or email is required")
+            raise ValueError("Member ID, name and email are required")
         
         if "@" not in email or "." not in email:
-            raise ValueError("enter email")
+            raise ValueError("Email must contain @ and .")
+        
+        if "|" in name or "|" in email:
+            raise ValueError("Name and email can't contain '|' or new lines: '|'. ")
 
         self.member_id = str(member_id)
         self.name = name
@@ -112,14 +141,23 @@ class Loan:
     MAX_RENEWALS = 1
 
 
-    def __init__(self, user, book):
-        """Creates the loan with a borrowing date and a 14day expiry"""
+    def __init__(self, user, book, loan_date = None, due_date = None, renewals = 0, is_active = True ):
+        """Creates the loan with a borrowing date and a 14day expiry period
+
+        when loading from the file, the loan/due date, renewals and active status are passed
+        in and used. if not, the loan jsut starts on the current day (today), has no renewals
+        and is active
+        loaded loans pass in their saved values ionstead"""
         self.user = user
         self.book = book
-        self.loan_date = date.today() # find when the book as actually borrowed
-        self.due_date = self.loan_date + timedelta(days=self.LOAN_PERIOD) #fiond due date
-        self.renewals = 0
-        self.is_active = True 
+    
+        # decided with defualting to None, instead of date.today() as a default value
+        # is only worked out when the program acutally startts; meaning each loan would get 
+        #this specific date
+        self.loan_date = loan_date if loan_date is not None else date.today() # find when the book as actually borrowed
+        self.due_date = due_date if due_date is not None else self.loan_date + timedelta(days=self.LOAN_PERIOD) #fiond due date
+        self.renewals = renewals
+        self.is_active = is_active
 
     def check_overdue(self): 
         """Checks if a active loan is passed its due date."""
@@ -163,7 +201,7 @@ class Loan:
         
         self.book.avaliable_copies += 1
 
-        return True, "Book returned succesffully"
+        return True, "Book returned successfully"
 
 
 class LibraryManager:
@@ -195,7 +233,7 @@ class LibraryManager:
         self.users.append(new_user)
         self.next_member_no += 1
 
-        return True, "User addedd successfully", new_user
+        return True, "User added successfully", new_user
 
     def search_book(self, title):
         """finds books whose titles contain the supplied search text
@@ -235,6 +273,17 @@ class LibraryManager:
                    
         return None # Added didnce hte method searches for a yuserm so either return no usr or none
 
+    def find_book(self, ISBN):
+        """finds book by its ISBN
+        
+        returns either the Book, or None if not found"""
+        ISBN = str(ISBN)
+
+        for book in self.books:
+            if str(book.ISBN) == ISBN:
+                return book
+        return None
+    
 
     
     def remove_book(self, ISBN):
@@ -246,13 +295,13 @@ class LibraryManager:
             if book.ISBN == ISBN:
 
                 if book.avaliable_copies != book.total_copies:
-                    return False, "Can't remove book because its borrowed"
+                    return False, "Can't remove book because it's borrowed"
                 
                 self.books.remove(book)
 
-                return True, "Book succesfully removed"
+                return True, "Book successfully removed"
 
-        return False, "Book no exists"
+        return False, "Book doesn't exist"
     
     def borrow_book(self, user, book):
         """creates a loan if the member and book are valid
@@ -268,7 +317,7 @@ class LibraryManager:
             return False, "Book doesn't exist", None
         
         if not book.check_avaliability():
-            return False, "Book not avaliable", None
+            return False, "Book not available", None
         
         if user.active_loan_count() >= User.MAX_LOANS:
             return False, "Maximum loans reached", None
@@ -368,5 +417,211 @@ class LibraryManager:
             found_users.append(user.show_user_info())
 
         return found_users
+
+
+    def save_data(self, books_file, members_file, loans_file):
+        """save all books, member and loans to their files"""
+
+        try:
+            with open(books_file, "w", encoding="utf-8") as file:
+                for book in self.books:
+                #save book details.
+                    write_record(file, [book.ISBN, book.title, book.author, book.genre, book.year, 
+                                    book.total_copies])
+
+            with open(members_file, "w", encoding="utf-8") as file:
+                 for user in self.users:
+                    #save member details.
+                    write_record(file, [user.member_id, user.name, user.email])
+
+            with open(loans_file, "w", encoding="utf-8") as file:
+                for loan in self.loans:
+                    # save IDs so they can backtrack back to books and members
+                    write_record(file, [loan.user.member_id, loan.book.ISBN, loan.loan_date.isoformat(),
+                                        loan.due_date.isoformat(), loan.renewals, loan.is_active])
+
+
+        except OSError as error:
+            return False, error
+
+        return True, "Data saved successfully"
+ 
+    def load_data(self, books_file, members_file, loans_file):
+        """ loads books and members and loans from files into library
+
+         - This Replaces whatever the library holds since it clears the lists
+        - If the files dont exist, the library is just left empty and it return success 
+        with a "no saved data" message
+        - "Bad lines are skipped, the actual message says how many
+        If a file cant be read (OSError), it returns faliure w/ a message
+
+         
+        """
+
+        try:
+            book_lines = read_lines(books_file)
+            member_lines = read_lines(members_file)
+            loan_lines = read_lines(loans_file)
+
+        # handles problem reading the files
+        except(OSError, UnicodeDecodeError) as error:
+            return False, f"Can't read the data: {error}"
+        self.books = []
+        self.users = []
+        self.loans = []
+        self.next_member_no = 1
+
+        if book_lines is None and member_lines is None and loan_lines is None:
+            return True, "No saved data available"
+
+
+        #load books+members first so loans can find their IDs
+        skipped = self.load_books(book_lines or [])
+        skipped += self.load_members(member_lines or [])
+        skipped += self.load_loans(loan_lines or [])
+
+        self.recalculate_copies() 
+        #added this now, as since copie arent saved, they're worked out from the loans that are loaded
+        # sets every books avaliable copies to teh correct number, after they load
+
+        # same as above, the coutner isnt saved, so new members continue from highest saved ID
+        self.restore_member_counter()
+
+        line_word = "line" if skipped == 1 else "lines"
+
+        return True, (
+            f"Loaded {len(self.books)} books, {len(self.users)} members, "
+            f"{len(self.loans)} loans ({skipped} {line_word} skipped)"
+        )
+
+    def load_books(self, lines):
+        """loads books froms saved file + coutns any skipped lines" 
+
+        """
+        skipped = 0
+        for line in lines:
+            try:
+                fields = line.split(SEPARATOR)
+
+                if len(fields) != 6: # 6 since each book has 6 fields in the saved file
+                    raise ValueError("Wrong no. of fields!")
+
+                ISBN, title, author, genre, year, total_copies = fields
+                
+                book = Book( ISBN, title, author, genre, int(year), int(total_copies))
+
+                #using add_book to check for duplicates 
+                success, message = self.add_book(book)
+
+                if not success: 
+                    raise ValueError(message)
+                
+            except ValueError:
+                skipped += 1
+
+        return skipped
+    
+    def load_members(self, lines):
+        """loads books froms saved file + coutns any skipped lines" 
+
+        """
+        skipped = 0
+        for line in lines:
+            try:
+                fields = line.split(SEPARATOR)
+                if len(fields) != 3: # 3 since each member has 3 fields in its saved file
+                    raise ValueError("Wrong no. of fields!")
+
+                member_id, name, email = fields
+
+                if not member_id.startswith("M") or not member_id[1:].isdigit():
+                    raise ValueError("Invalid member ID")
+                
+                if self.search_user(member_id) is not None:
+                    raise ValueError("Duplicate member")
+
+                #not building this with create_user, since it would make a new ID
+                self.users.append(User(member_id, name, email))
+                
+            except ValueError:
+                skipped += 1
+
+        return skipped
+    
+    def load_loans(self, lines):
+        """rebuilds each loan thats attactched to teh loaded member and the book +
+         counts skipped lines
+          
+         needs to run after load_books and load_members, since it looks both up by ID
+            """
+        skipped = 0
+        for line in lines:
+            try:
+                fields = line.split(SEPARATOR)
+
+                if len(fields) != 6: # 6 since each loan has 6 fields in the saved file
+                    raise ValueError("Wrong no. of fields!")
+
+                member_id, ISBN, loan_date, due_date, renewals, active = fields
+
+                user = self.search_user(member_id)
+                book = self.find_book(ISBN)
+
+                if user is None or book is None:
+                    raise ValueError("Member/book not found")
+
+                loan_date = date.fromisoformat(loan_date) 
+                due_date = date.fromisoformat(due_date)       
+                renewals = int(renewals)
+
+                if active not in ("True", "False"):
+                    raise ValueError("Invalid loan status")
+                
+                is_active = active == "True"
+
+                #checlk if enouygh copies for active loans
+
+                if is_active and self.count_active_loans(book) >= book.total_copies:
+                    raise ValueError("More active loans than copies")
+                
+                loan = Loan(user, book, loan_date, due_date, renewals, is_active)
+
+                self.loans.append(loan)
+                user.loans.append(loan)
+
+            except ValueError:
+                skipped += 1
+
+        return skipped
+    
+    def count_active_loans(self, book):
+        """count active loans for a book"""
+        count = 0
+
+        for loan in self.loans:
+            if loan.book is book and loan.is_active:
+                count += 1
+
+        return count
+    
+    def recalculate_copies(self):
+        """sents each books avaliable copies from its active loans
+        
+        returned loans fotn count; therefore, cant reduce avaliabiltiy"""
+        for book in self.books:
+            book.avaliable_copies = book.total_copies - self.count_active_loans(book)
+
+    def restore_member_counter(self):
+        """sets the next member number to the highest saved one +1, or 1 if none"""
+        highest = 0
+
+        for user in self.users:
+            # compared aws number, so m1000 counts as higher than m999
+            number = int(user.member_id[1:])
+            if number > highest:
+                highest = number
+
+        self.next_member_no = highest + 1
+
 
 

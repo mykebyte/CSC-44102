@@ -273,12 +273,9 @@ def test_update_quantity_below_borrowed():
     success, message = book1.update_quantity(-2)
 
     assert success is False
-    assert message == "cant remove copies that are borrowed"
+    assert message == "Can't remove copies that are borrowed"
     assert book1.total_copies == 2
     assert book1.avaliable_copies == 1
-
-    
-
 
 def test_overdue_loan_listed():
     """create an overdue loan which appears in the overdue report"""
@@ -350,6 +347,19 @@ def test_overdue_loans_olderst_first():
 
     assert lib.get_overdue_loans() == [oldest_loan, recent_loan]
 
+def test_find_book_exisiting():
+    """checks a book can be found by its isbn"""
+    lib = LibraryManager()
+    book = make_book("123")
+    lib.add_book(book)
+
+    assert lib.find_book("123") is book
+
+def test_find_unknown_book():
+    """checks None is returned for an ISBN which doesn't exist"""
+    lib = LibraryManager()
+
+    assert lib.find_book("999") is None
 
 
 
