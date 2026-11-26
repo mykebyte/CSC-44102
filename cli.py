@@ -32,6 +32,9 @@ def add_book_option(lib):
     success,message = lib.add_book(book)
     print(message)
 
+    if success:
+        save(lib)
+
 def view_book_options(lib):
     """Shows all books currently in library"""
     if not lib.books:
@@ -67,6 +70,15 @@ def get_whole_no(prompt, minimum=None):
 
         return number
 
+def save(lib):
+    """saves all data, warns if it fails else rerturns if it worked"""
+    success, message = lib.save_data(BOOKS, MEMBERS, LOANS)
+
+    if not success:
+        print(f'Error: change message cant be saved: {message}')
+
+    return success
+    
 
 
 def books_menu(lib):
@@ -128,6 +140,7 @@ def add_member_option(lib):
     print(message)
 
     if success:
+        save(lib)
         print(f'Member ID: {user.member_id}')
 
 def view_members_option(lib):
@@ -191,6 +204,8 @@ def borrow_option(lib):
     print(message)
 
     if success:
+        save(lib)
+
         print(f'Due date: {loan.due_date}')
 
 def return_option(lib):
@@ -207,8 +222,11 @@ def return_option(lib):
     success, message = lib.return_book(loan)
     print(message)
 
-    if success and was_overdue:
-        print(f'Book returned late')
+    if success:
+        save(lib)
+        
+        if was_overdue:
+            print(f'Book returned late')
 
 def renew_option(lib):
     """renew an active loan"""
@@ -224,6 +242,8 @@ def renew_option(lib):
     print(message)
 
     if success:
+        save(lib)
+
         print(f'New due date: {loan.due_date}')
 
 
@@ -306,6 +326,9 @@ def remove_book_option(lib):
     success, message = lib.remove_book(ISBN)
     print(message)
 
+    if success:
+        save(lib)
+
 
 def update_copies_option(lib):
     """Allows the user to up or down the copies"""
@@ -324,6 +347,8 @@ def update_copies_option(lib):
     print(message)
 
     if success:
+        save(lib)
+
         show_book(book)
 
 def members_menu(lib):
@@ -374,11 +399,8 @@ def main():
         elif choice == "3":
             loans_menu(lib)
         elif choice == "4":
-            success, message = lib.save_data(BOOKS, MEMBERS, LOANS)
-            print(message)
-
-            if success:
-                print("Closing...")
+            if save(lib):
+                print("Data saved.. Closing..")
                 break
         else:
             print("Try again")
