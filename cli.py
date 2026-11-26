@@ -117,7 +117,7 @@ def convert_member_id(prompt):
     return answer.upper()
 
 def show_member(member):
-    """Get member ID and converts it"""
+    """Show details of a member ID and convert it"""
     print(f'ID: {member.member_id} | Name: {member.name} | email: {member.email}')
 
 def show_loan(loan):
@@ -214,7 +214,7 @@ def return_option(lib):
     loan = lib.find_active_loan(member_id, ISBN)
 
     if loan is None:
-        print("no active oan found")
+        print("no active loan found")
         return
     
     was_overdue = loan.check_overdue()
@@ -262,7 +262,7 @@ def overdue_option(lib):
 def loans_menu(lib):
     """loops the menu options until the user reverts"""
     while True:
-        print("\nBooks")
+        print("\nLoans")
         print("1. Borrow a book")
         print("2. Return a book")
         print("3. Renew a loan")
@@ -354,7 +354,7 @@ def update_copies_option(lib):
 def members_menu(lib):
     """loops the menu options until the user reverts"""
     while True:
-        print("\nBooks")
+        print("\nMembers")
         print("1. Add a member")
         print("2. View members")
         print("3. Search member")
