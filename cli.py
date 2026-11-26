@@ -99,11 +99,71 @@ def books_menu(lib):
             print("Try again")
 
         
+def convert_member_id(prompt):
+    """Get member ID and converts it"""
+    answer = get_non_empty_input(prompt)
+    return answer.upper()
 
+def show_member(member):
+    """Get member ID and converts it"""
+    print(f'ID: {member.member_id} | Name: {member.name} | email: {member.email}')
 
-def members_menu(lib):
-    print("\nMembers:")
-    print("Not built yet")
+def show_loan(loan):
+    """show detials of loan"""
+    if loan.check_overdue():
+        status = "OVERDUE"
+    elif loan.is_active:
+        status = "Active"
+    else:
+        status = "Returned"
+
+    print(f'title: {loan.book.title} | member: {loan.user.name} | loan: {loan.loan_date} | due date: {loan.due_date} | Status: {status}')
+
+def add_member_option(lib):
+    """Gets member detials, adding them to library"""
+    name = get_non_empty_input("Name: ")
+    email = get_non_empty_input("Email: ")
+
+    success, message, user = lib.create_user(name, email)
+    print(message)
+
+    if success:
+        print(f'Member ID: {user.member_id}')
+
+def view_members_option(lib):
+    """ show all members in library"""
+    if not lib.users:
+        print("No members found")
+        return
+    for member in lib.users:
+        show_member(member)
+
+def search_member_option(lib):
+    """finds member using their ID"""
+    member_id = convert_member_id("Member ID: ")
+    member = lib.search_user(member_id)
+
+    if member is None:
+        print("Member not found")
+    else:
+        show_member(member)
+
+def member_loans_option(lib):
+    """shows all loans belonging to a member"""
+    member_id = convert_member_id("Member ID: ")
+
+    if lib.search_user(member_id) is None:
+        print("Member not found")
+        return
+    
+    loans = lib.get_user_loans(member_id)
+
+    if not loans:
+        print("member has no loans")
+        return
+    
+    for loan in loans:
+        show_loan(loan)
 
 def loans_menu(lib):
     print("\nLoans:")
@@ -165,6 +225,30 @@ def update_copies_option(lib):
     if success:
         show_book(book)
 
+def members_menu(lib):
+    """loops the menu options until the user reverts"""
+    while True:
+        print("\nBooks")
+        print("1. Add a member")
+        print("2. View members")
+        print("3. Search member")
+        print("4. View member loans")
+        print("5. Back")
+
+        answer = input("Enter a command: ").strip()
+
+        if answer == "1":
+            add_member_option(lib)
+        elif answer == "2":
+            view_members_option(lib)
+        elif answer == "3":
+            search_member_option(lib)
+        elif answer == "4":
+            member_loans_option(lib)
+        elif answer == "5":
+            return
+        else:
+            print("Try again")
 
 
 
