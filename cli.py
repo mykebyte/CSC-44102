@@ -165,9 +165,110 @@ def member_loans_option(lib):
     for loan in loans:
         show_loan(loan)
 
+def get_member_and_isbn():
+    """asks for member ID + ISBN, but returns both"""
+    member_id = convert_member_id("Member ID: ")
+    ISBN = get_non_empty_input("ISBN: ")
+
+    return member_id, ISBN
+
+def borrow_option(lib):
+    """allows members to borrow a book"""
+    member_id, ISBN = get_member_and_isbn()
+
+    member = lib.search_user(member_id)
+
+    if member is None:
+        print("Member not found")
+        return
+    book  = lib.find_book(ISBN)
+
+    if book is None:
+        print("Book not found")
+        return
+    
+    success, message, loan = lib.borrow_book(member, book)
+    print(message)
+
+    if success:
+        print(f'Due date: {loan.due_date}')
+
+def return_option(lib):
+    """returns a book borrowed by a member"""
+    member_id, ISBN = get_member_and_isbn()
+    loan = lib.find_active_loan(member_id, ISBN)
+
+    if loan is None:
+        print("no active oan found")
+        return
+    
+    was_overdue = loan.check_overdue()
+
+    success, message = lib.return_book(loan)
+    print(message)
+
+    if success and was_overdue:
+        print(f'Book returned late')
+
+def renew_option(lib):
+    """renew an active loan"""
+
+    member_id, ISBN = get_member_and_isbn()
+    loan = lib.find_active_loan(member_id, ISBN)
+
+    if loan is None:
+        print("no active oan found")
+        return
+
+    success, message = lib.renew_loan(loan)
+    print(message)
+
+    if success:
+        print(f'New due date: {loan.due_date}')
+
+
+def overdue_option(lib):
+    """Shows all overdue loans, starting with the oldest"""
+    overdue_loans = lib.get_overdue_loans()
+
+    if not overdue_loans:
+        print("No overdue loans")
+        return
+    
+    for loan in overdue_loans:
+        show_loan(loan)
+
+
 def loans_menu(lib):
-    print("\nLoans:")
-    print("Not built yet")
+    """loops the menu options until the user reverts"""
+    while True:
+        print("\nBooks")
+        print("1. Borrow a book")
+        print("2. Return a book")
+        print("3. Renew a loan")
+        print("4. Overdue loans")
+        print("5. Back")
+
+        answer = input("Enter a command: ").strip()
+
+        if answer == "1":
+            borrow_option(lib)
+        elif answer == "2":
+            return_option(lib)
+        elif answer == "3":
+            renew_option(lib)
+        elif answer == "4":
+            overdue_option(lib)
+        elif answer == "5":
+            return
+        else:
+            print("Try again")
+
+
+
+
+
+
 
 def search_books_option(lib):
     """Lets user search for a book by title or ISBN"""
