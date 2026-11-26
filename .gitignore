@@ -21,3 +21,8 @@ Thumbs.db
 # Local environment variables
 .env
 .env.*
+
+books.txt
+members.txt
+loans.txt
+scratch_save.py
