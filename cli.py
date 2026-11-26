@@ -20,7 +20,7 @@ def members_menu(lib):
 
 def loans_menu(lib):
     print("Loans:")
-    print("Not built yet")
+    print("Not built yet")1
 
 
 def main():
