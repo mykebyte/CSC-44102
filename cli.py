@@ -12,7 +12,7 @@ LOANS = "loans.txt"
 
 def show_book(book):
     """Show detials of book"""
-    print(f'ISBN: {book.ISBN} | title: {book.title} | author: {book.author} | title: {book.title} | genre: {book.genre} | year: {book.year} | avaliable_copies: {book.avaliable_copies} / {book.total_copies} avaliable. | ')
+    print(f'ISBN: {book.ISBN} | title: {book.title} | author: {book.author} | genre: {book.genre}| year: {book.year} | avaliable_copies: {book.avaliable_copies} / {book.total_copies} avaliable.  ')
 
 def add_book_option(lib):
     """Gets book details, adds to library"""
@@ -20,8 +20,8 @@ def add_book_option(lib):
     title = get_non_empty_input("title: ")
     author = get_non_empty_input("author: ")
     genre = get_non_empty_input("genre: ")
-    year = get_non_empty_input("year: ")
-    copies = get_non_empty_input("copies: ")
+    year = get_whole_no("year: ",0)
+    copies = get_whole_no("copies: ",0)
 
     try: 
         book = Book(ISBN, title, author, genre, year, copies)
@@ -68,17 +68,104 @@ def get_whole_no(prompt, minimum=None):
         return number
 
 
+
 def books_menu(lib):
-    print("Books:")
-    print("Not built yet")
+    """loops the menu options until the user reverts"""
+    while True:
+        print("\nBooks")
+        print("1. Add a book")
+        print("2. View books")
+        print("3. Search books")
+        print("4. Remove a book")
+        print("5. Update copies")
+        print("6. Back")
+
+        answer = input("Enter a command: ").strip()
+
+        if answer == "1":
+            add_book_option(lib)
+        elif answer == "2":
+            view_book_options(lib)
+        elif answer == "3":
+            search_books_option(lib)
+        elif answer == "4":
+            remove_book_option(lib)
+        elif answer == "5":
+            update_copies_option(lib)
+        elif answer == "6":
+            return
+
+        else:
+            print("Try again")
+
+        
+
 
 def members_menu(lib):
-    print("Members:")
+    print("\nMembers:")
     print("Not built yet")
 
 def loans_menu(lib):
-    print("Loans:")
+    print("\nLoans:")
     print("Not built yet")
+
+def search_books_option(lib):
+    """Lets user search for a book by title or ISBN"""
+    print("1 - seach by title")
+    print("2 - seach by ISBN")
+
+    answer = input("Enter a command: ").strip()
+
+    if answer == "1":
+        title=get_non_empty_input("Title, or the first few characters: ")
+        found_books = lib.search_book(title)
+
+        if not found_books:
+            print("No matching books")
+            return
+        
+        for book in found_books:
+            show_book(book)
+
+    elif answer == "2":
+        ISBN = get_non_empty_input("ISBN: ")
+        book = lib.find_book(ISBN)
+
+        if book is None:
+            print("Book not found")
+        else:
+            show_book(book)
+
+    else:
+        print("try again")
+
+def remove_book_option(lib):
+    """Removes a book, via its ISBN"""
+    ISBN = get_non_empty_input("ISBN: ")
+    success, message = lib.remove_book(ISBN)
+    print(message)
+
+
+def update_copies_option(lib):
+    """Allows the user to up or down the copies"""
+    ISBN = get_non_empty_input("ISBN: ")
+    book = lib.find_book(ISBN)
+
+    if book is None:
+        print("Book not found")
+        return
+    
+    show_book(book)
+
+    change = get_whole_no("Change in copies: ")
+    success, message = book.update_quantity(change)
+
+    print(message)
+
+    if success:
+        show_book(book)
+
+
 
 
 def main():
@@ -96,14 +183,18 @@ def main():
         choice = str(input("Enter a comand: ")).strip()
 
         if choice == "1":
-            add_book_option(lib)
+            books_menu(lib)
         elif choice == "2":
-            view_book_options(lib)
-        elif choice in ("3", "4", "5"):
-            print("Not built yetd")
-        elif choice == "6":
-            return
+            members_menu(lib)
+        elif choice == "3":
+            loans_menu(lib)
+        elif choice == "4":
+            success, message = lib.save_data(BOOKS, MEMBERS, LOANS)
+            print(message)
 
+            if success:
+                print("Closing...")
+                break
         else:
             print("Try again")
 
