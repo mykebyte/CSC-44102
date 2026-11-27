@@ -55,7 +55,7 @@ class LibraryApp(tk.Frame):
 
         # PLACEHOLDERS
 
-        ttk.Label(self.book_tab, text="Not built yet").grid(row=0, column=0)
+        self.create_books_tab()
         ttk.Label(self.members_tab, text="Not built yet").grid(row=0, column=0)
         ttk.Label(self.loans_tab, text="Not built yet").grid(row=0, column=0)
 
@@ -135,13 +135,102 @@ class LibraryApp(tk.Frame):
         return member_id.upper()
     
     def after_change(self):
-        """save data after teh cahnge is successful"""
-        return self.save()
+        """save data + updates books table"""
+
+        if self.save():
+            self.refresh_books()
+            return True
+        
+
+        return False
             
             
             
         
             
+    def make_entry(self, parent, text, row, column, width=25):
+        """creates label + entry box"""
+
+        ttk.Label(parent, text=text).grid( row=row, column=column,padx=5,pady=3,sticky="w")
+        entry = ttk.Entry(parent, width=width)
+        entry.grid(row=row,column=column+1,padx=5,pady=3)
+
+        return entry 
+
+    def create_books_tab(self):
+        """creates the book form buttons and table"""
+
+        form = ttk.Frame(self.book_tab)
+        form.grid(row=0, column=0, sticky="w")
+
+        self.isbn_entry = self.make_entry(form, "ISBN",0,0)
+        self.title_entry = self.make_entry(form, "Title",1,0)
+        self.author_entry = self.make_entry(form, "Author",2,0)
+        self.genre_entry = self.make_entry(form, "Genre",0,2,15)
+        self.year_entry = self.make_entry(form, "Year",1,2,15)
+        self.copies_entry = self.make_entry(form, "Copies",2,2,15)
+        self.amount_entry = self.make_entry(form, "Amount",3,2,15)
+
+        buttons = ttk.Frame(self.book_tab)
+        buttons.grid(row=1,column=0,sticky="w",pady="10")
+
+        ttk.Button(buttons, text="Add").grid(row=0,column=0, padx=5) 
+        ttk.Button(buttons, text="Remove").grid(row=0,column=1, padx=5) 
+        ttk.Button(buttons, text="Change quantity").grid(row=0,column=2, padx=5) 
+        ttk.Button(buttons, text="Search").grid(row=0,column=3, padx=5) 
+        ttk.Button(buttons, text="Show all",command = self.refresh_books).grid(row=0,column=4,padx=5)
+
+        table_frame = ttk.Frame(self.book_tab)
+        table_frame.grid(row=2, column=0, sticky="nsew")
+
+        columns = ("isbn", "title", "author", "genre", "year", "available")
+
+        self.books_table = ttk.Treeview(table_frame, columns=columns, show="headings", height=10)
+
+        headings = {
+                "isbn":            ("ISBN", 90),
+                "title":           ("Title", 200),
+                "author":          ("Author", 140),
+                "genre":           ("Genre", 100),
+                "year":            ("Year", 60),
+                "available":       ("Available", 80)
+                }
+        
+        for column in columns:
+            name, width = headings[column]
+            self.books_table.heading(column, text=name)
+            self.books_table.column(column, width = width)
+
+        scrollbar = ttk.Scrollbar(
+            table_frame, orient="vertical",
+            command = self.books_table.yview
+        )
+
+        self.books_table.configure(yscrollcommand=scrollbar.set)
+
+        self.books_table.grid(row=0, column=0, sticky="nsew")
+        scrollbar.grid(row=0, column=1, sticky="ns")
+
+        self.refresh_books()
+        
+    def refresh_books(self, books=None):
+        """Updates the table with the current books, sorted by title."""
+
+        if books is None:
+            books = self.lib.books
+
+        self.books_table.delete(*self.books_table.get_children())
+
+        for book in sorted(books, key=lambda b: b.title.lower()):
+            available = str(book.avaliable_copies) + " / " + str(book.total_copies)
+
+            self.books_table.insert("", "end", iid=book.ISBN,
+                                    
+                                    values=(book.ISBN, book.title, book.author,
+                                    book.genre, book.year, available)
+                                    )
+
+
 
 
 def main():
