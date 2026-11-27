@@ -7,7 +7,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 
-from library_core import LibraryManager
+from library_core import LibraryManager, Book
 
 BOOKS = "books.txt"
 MEMBERS = "members.txt"
@@ -120,7 +120,7 @@ class LibraryApp(tk.Frame):
             return None
 
         if minimum is not None and no < minimum:
-            messagebox.showerror(f"invalid input", f"{field} must be at least {minimum}")
+            messagebox.showerror(f"invalid input", f"{field} must be at least: {minimum}")
             return None
         
         return no
@@ -230,6 +230,80 @@ class LibraryApp(tk.Frame):
                                     book.genre, book.year, available)
                                     )
 
+    def add_book_clicked(self):
+        """gets the details from  form and adds the book
+        chcks and adds book to librry if all else is good"""
+
+        isbn = self.read_text(self.isbn_entry, "ISBN")
+
+        if isbn is None:
+            return
+
+        title = self.read_text(self.title_entry, "Title")
+        if title is None:
+            return
+
+        author = self.read_text(self.author_entry, "Author")
+        if author is None:
+            return
+        
+        # author = self.read_text(self.author_entry, "Author")
+        # if author is None:
+        #     return
+
+        genre = self.read_text(self.genre_entry, "Genre")
+        if genre is None:
+            return
+
+        year = self.read_whole_no(self.year_entry, "Year", 0)
+        if year is None:
+            return
+
+        copies = self.read_whole_no(self.copies_entry, "Copies", 0)
+        if copies is None:
+            return
+
+        try:
+            book = Book(isbn, title, author, genre, year, copies)
+        except ValueError as error:
+            messagebox.showerror("Add book", str(error))
+            return
+
+        success, message = self.lib.add_book(book)
+
+        if self.show_result("Add book", success, message):
+            if self.after_change():
+                self.clear_book_form()
+
+    def remove_book_clicked(self):
+        """removes a book using its ISBN"""
+
+        isbn = self.read_text(self.isbn_entry, "ISBN")
+        if isbn is None:
+            return
+
+        confirm = messagebox.askyesno(
+            "Remove book", "Are you sure you want to remove this book?"
+        )
+
+        if not confirm:
+            return
+
+        success, message = self.lib.remove_book(isbn)
+
+        if self.show_result("Remove book", success, message):
+            if self.after_change():
+                self.isbn_entry.delete(0, tk.END)
+
+    def clear_book_form(self):
+        """clears all the book entry boxes"""
+
+        self.isbn_entry.delete(0, tk.END)
+        self.title_entry.delete(0, tk.END)
+        self.author_entry.delete(0, tk.END)
+        self.genre_entry.delete(0, tk.END)
+        self.year_entry.delete(0, tk.END)
+        self.copies_entry.delete(0, tk.END)
 
 
 
